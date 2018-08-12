@@ -1,8 +1,142 @@
+mixin task_time
+	.select
+		label
+			input(type="radio" value="interval")
+			| &nbsp;интервал
+		.input
+			input(type="text" value="10" maxlength="2")
+			|:
+			input(type="text" value="10" maxlength="2")
+			|:
+			input(type="text" value="10" maxlength="2")
+		label
+			input(type="radio" value="totime")
+			| &nbsp;по времени
+		.input
+			input(type="text" value="10" maxlength="2")
+			|:
+			input(type="text" value="10" maxlength="2")
+			|:
+			input(type="text" value="10" maxlength="2")
+			| &nbsp; &nbsp;
+			input(type="text" value="10" maxlength="2")
+		label
+			input(type="radio" value="manual")
+			| &nbsp;ручной
+		.input
+			input(type="button" value="OK")
+			| &nbsp;
+			input(type="button" value="Отмена")
+
+mixin task_item
+	.item
+		.head alias-of-task
+			.description Lorem ipsum dolor sit amet, consectetur adipisicing elit. Laborum atque ea consequatur alias ad dicta explicabo quibusdam, voluptatum repellat natus.
+		.wrap
+			.t-time.time
+				a(href="" onclick="javascript:return false") 10:30
+			.ctrl
+				input(type="button" value="kill")
+				input(type="button" value="restart")
+				label.switch
+					input(type="checkbox")
+					.slider
+			.stat.server
+				a(href="") test-server1
+				br
+				| pid:
+				span 1234
+				br
+				| RAM:
+				span 10
+				| MB
+			.stat.script
+				span.starttime start-time:
+					span 10:30:21
+				br
+				span.runtime runtime:
+					span 1:03:29
+				br
+				span.endtime endtime:
+					span 1:03:29
+				br
+				a(href="") log-out:
+					span 33802
+				br
+				a(href="") log-err:
+					span 324
+				br
+			.cmd_avg
+				xmp.env
+					| ENV1=Lorem ipsum dolor.
+					| ENV2=Lorem ipsum dolor sit amet.
+					| ENV3=Lorem ipsum.
+					| ENV4=Lorem ipsum dolor sit amet, consectetur adipisicing.
+					| ENV5=Lorem ipsum dolor sit amet.
+					| ENV5=Lorem ipsum dolor sit amet.
+				xmp
+					| /usr/bin/command
+					| /home/dev/script.php
+					| string avg1
+					| string  Lorem ipsum dolor.
+					| int avg3
+					| string avg4
+					| Lorem ipsum dolor sit amet, consectetur adipisicing.
+
+mixin client_item
+	.item
+		.head test-server1
+			.status.red
+		.stat
+			| 127.0.0.1
+			| | loadavg: 0.5 0.2 0.1
+			| | uptime: 70 days
+			| |&nbsp;
+			a(href="") tasks: 25
+		.ctrl
+			label.switch
+				input(type="checkbox")
+				.slider
+		.tasks
+			| sdf
+
 doctype html
 html
 	head
 		link(href="/css/style.css" rel="stylesheet")
+		meta(charset="utf-8")
+		script(src="/js/jquery.js")
+		script(src="/js/controls.js")
+		script(src="/js/tasks.js")
+		script(src="/js/clients.js")
+		script(src="/js/common.js")
 		title Octopus Control
 	body
-		.tasks
-			.item
+		.head Octopus Control
+		.content#content
+			.menu
+				.tabs
+					.tab(sheet="tasks") Задачи
+					.tab.sel(sheet="servers") Сервера
+				.ctrl
+					| Запуск заданий
+					label.switch
+						input(id="task_enabled" type="checkbox")
+						.slider
+					button(id="task_killall")
+						| Убить все
+						br
+						| задачи
+		.foot
+
+		script(id="Tasks" type="html/template")
+			.tasks.tabsheet
+		script(id="Task" type="html/template")
+			+task_item
+		script(id="TaskTime" type="html/template")
+			+task_time
+
+		script(id="Clients" type="html/template")
+			.clients.tabsheet
+		script(id="Client" type="html/template")
+			+client_item
