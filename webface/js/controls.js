@@ -4,7 +4,7 @@ function Control(parent_item,parent_dom)
 	// this.parentItem=parent_item;
 
 	var template=document.getElementById(this.className);
-	if(!template) return console.error('Not found #'+this.className+' html template!');
+	if(!template) throw new Error('Not found #'+this.className+' html template!');
 
 	template=template.innerHTML;
 
@@ -72,27 +72,41 @@ function Control(parent_item,parent_dom)
 	/**
 	* Удаляет элемент из массива items
 	*
-	* @param index
+	* @param obj_index
 	*/
-	this.delete=function(index)
+	this.delete=function(obj_index)
 	{
-		if(typeof index=='number')
+		if(typeof obj_index=='object')
 		{
-			var obj;
-			if(obj=items[index])
+			items.some((e,i) =>
 			{
-				items.splice(index,1);
-				obj.remove();
-			}
+				if(obj_index===e)
+				{
+					this.delete(i);
+
+					return true;
+				}
+				else return false;
+			});
 		}
+		else if(typeof obj_index=='number')
+			{
+				var obj;
+				if(obj=items[obj_index])
+				{
+					items.splice(obj_index,1);
+					obj.remove();
+				}
+		 	}
 	};
+
 
 	/**
 	* Изменяемые/рабочие элементы DOM шаблона.
 	*
-	* Собираются из всех существующих дочерних элементов шаблона, в которых присутствует заполненное поле class
+	* Собираются из всех существующих дочерних элементов шаблона, в которых присутствует заполненное поле class с префиксом mclass_prefix
 	* и "складируется" в "ассоциативный массив" elements. Где "ключем" является 1й класс (masterclass) заданный
-	* в свойстве элемента, а значением ссылка на сам элемент.
+	* в свойстве элемента (за вычетом префикса mclass_prefix), а значением ссылка на сам элемент.
 	*
 	* @type {{}}
 	*/
@@ -101,7 +115,7 @@ function Control(parent_item,parent_dom)
 	/**
 	* Наполнение "ассоциативного массива" elements, ссылками на изменяемые элементы.
 	*/
-	this.$(dom).find('[class^='+this.mclass_prefix+']').toArray().forEach((e) => { elements[e.classList[0].replace(new RegExp('^'+this.mclass_prefix),'')]=e; });  // todo: отвязаться от jq
+	this.$(dom).find('[class^='+this.mclass_prefix+']').toArray().forEach(e => elements[e.classList[0].replace(new RegExp('^'+this.mclass_prefix),'')]=e);  // todo: отвязаться от jq
 
 	/**
 	* Возвращает все изменяемые/рабочие элементы DOM шаблона.
@@ -122,7 +136,7 @@ function Control(parent_item,parent_dom)
 	};
 
 	/**
-	* Получение/установка основного аттрибута тега. Для разных тегов основной аттрибут разный
+	* Получение/установка основного изменяемого аттрибута тега. Для разных тегов основной аттрибут разный
 	* input[type=checkbox|radio].checked
 	* input.value
 	* textarea.value
@@ -133,32 +147,37 @@ function Control(parent_item,parent_dom)
 	*/
 	this.value=function(masterclass,val)
 	{
-		if(elements[masterclass]!==undefined)
+		var e;
+
+		if((e=elements[masterclass])!==undefined)
 		{
-			var f=function(at) { return val===undefined ? elements[masterclass][at] : elements[masterclass][at]=val; };
-			var tag=elements[masterclass].tagName.toLowerCase();
+			var f=(e,at,val) => val!==undefined && e[at]!=val ? e[at]=val : e[at];
+			var tag=e.tagName.toLowerCase();
 
-			if(tag=='input' || tag=='textarea')
+			if(['input','textarea'].indexOf(tag)>=0)
 			{
-				var type=f('type');
+				var type=f(e,'type');
 
-				if(type=='checkbox' || type=='radio') return f('checked');
-				else  return f('value');
+				return f(e,['checkbox','radio'].indexOf(type)>=0 ? 'checked' : 'value',val);
 			}
-			else return f('innerHTML');
+			else return f(e,'innerHTML',val);
 		}
+		else console.error('Element not found:',masterclass);
 	};
 
-	this.valueInt=function(masterclass,val)
+	this.bindev=function(elementid,event,func)
 	{
-		if(elements[masterclass]!==undefined)
-		{
-			return val!==undefined ? this.value(masterclass,parseInt(val)) : parseInt(this.value(masterclass)) ;
-		}
+		if(typeof elementid!='string') return console.error('Invalid bindev argument elementid:',elementid);
+		if(typeof event!='string') return console.error('Invalid bindev argument event:',event);
+		if(typeof func!='function') return console.error('Invalid bindev argument function:',func);
+
+		if(elements[elementid]===undefined) return console.error('Invalid elementid:',elementid);
+
+		elements[elementid].addEventListener(event,func,false);
 	};
 
 	/**
-	* Дополнительные данные используемые в объекте.
+	* Модель используемая в объекте.
 	*
 	* @type {{}}
 	*/
@@ -169,24 +188,24 @@ function Control(parent_item,parent_dom)
 		return val===undefined ? data[key] : data[key]=val;
 	};
 
-	/**
-	* Одновременная установка data (дополнительных, внутренних данных) & value (визуальных элементов) по схожим названиям ключей.
-	*
-	* @param key
-	* @param val
-	*/
-	this.datanval=function(key,val)
+	this.bind=function(key,func)
 	{
-		if(val===undefined || val===undefined) return;
+		if(typeof key!='string') return console.error('Invalid bind key:',key);
+		if(typeof func!='function') return console.error('Invalid bind function:',func);
 
-		this.value(key,val);
-		this.data(key,val);
+		Object.defineProperty(data,key,
+		{
+			set: v => { data['_'+key]=v; func(v); },
+			get: () => data['_'+key]
+		});
 	};
 
-	// this.loadData=function(data)
-	// {
-	// 	for(var k in data) this.datanval(k,data[k]);
-	// };
+	this.loadData=function(data)
+	{
+		for(var k in data) this.data(k,data[k]);
+
+		return this;
+	};
 
 	this.appendTo=function(target)
 	{
