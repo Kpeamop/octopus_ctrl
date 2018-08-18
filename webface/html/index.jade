@@ -30,72 +30,79 @@ mixin task_time
 
 mixin task_item
 	.item
-		.head alias-of-task
-			.description Lorem ipsum dolor sit amet, consectetur adipisicing elit. Laborum atque ea consequatur alias ad dicta explicabo quibusdam, voluptatum repellat natus.
+		.head
+			span.t-alias alias-of-task
+			.t-description.description Lorem ipsum dolor sit amet, consectetur adipisicing elit. Laborum atque ea consequatur alias ad dicta explicabo quibusdam, voluptatum repellat natus.
 		.wrap
 			.t-time.time
-				a(href="" onclick="javascript:return false") 10:30
+				a.t-time-text(href="" onclick="javascript:return false") 10:30
 			.ctrl
-				input(type="button" value="kill")
-				input(type="button" value="restart")
+				input.t-kill(type="button" value="kill")
+				input.t-restart(type="button" value="restart")
 				label.switch
-					input(type="checkbox")
+					input.t-enabled(type="checkbox")
 					.slider
 			.stat.server
-				a(href="") test-server1
+				a.t-server(href="") test-server1
 				br
 				| pid:
-				span 1234
+				span.t-pid 1234
 				br
 				| RAM:
-				span 10
+				span.t-ram 10
 				| MB
 			.stat.script
-				span.starttime start-time:
-					span 10:30:21
+				span.starttime starttime:
+					span.t-starttime 10:30:21
 				br
 				span.runtime runtime:
-					span 1:03:29
+					span.t-runtime 1:03:29
 				br
 				span.endtime endtime:
-					span 1:03:29
+					span.t-endtime 1:03:29
 				br
-				a(href="") log-out:
+				a.t-logout(href="") log-out:
 					span 33802
 				br
-				a(href="") log-err:
+				a.t-logerr(href="") log-err:
 					span 324
 				br
-			.cmd_avg
-				xmp.env
+			.cmd_args
+				xmp.t-env.env
 					| ENV1=Lorem ipsum dolor.
 					| ENV2=Lorem ipsum dolor sit amet.
 					| ENV3=Lorem ipsum.
 					| ENV4=Lorem ipsum dolor sit amet, consectetur adipisicing.
 					| ENV5=Lorem ipsum dolor sit amet.
 					| ENV5=Lorem ipsum dolor sit amet.
-				xmp
+				xmp.t-cmdargs
 					| /usr/bin/command
 					| /home/dev/script.php
-					| string avg1
+					| string arg1
 					| string  Lorem ipsum dolor.
-					| int avg3
-					| string avg4
+					| int arg3
+					| string arg4
 					| Lorem ipsum dolor sit amet, consectetur adipisicing.
 
 mixin client_item
 	.item
-		.head test-server1
-			.status.red
+		.head
+			span.c-alias test-server1
+			.c-active.status.red
 		.stat
-			| 127.0.0.1
-			| | loadavg: 0.5 0.2 0.1
-			| | uptime: 70 days
-			| |&nbsp;
-			a(href="") tasks: 25
+			span.c-ip 127.0.0.1
+			| &nbsp;| loadavg:
+			span.c-loadavg
+				| 0.5 0.2 0.1
+			| &nbsp;| uptime:
+			span.c-uptime
+				| 70 days
+			| &nbsp;|&nbsp;
+			a(href="") tasks:
+				span.c-tasks 25
 		.ctrl
 			label.switch
-				input(type="checkbox")
+				input.c-enabled(type="checkbox")
 				.slider
 		.tasks
 			| sdf
@@ -106,6 +113,7 @@ html
 		link(href="/css/style.css" rel="stylesheet")
 		meta(charset="utf-8")
 		script(src="/js/jquery.js")
+		script(src="/js/functions.js")
 		script(src="/js/controls.js")
 		script(src="/js/tasks.js")
 		script(src="/js/clients.js")
@@ -116,8 +124,8 @@ html
 		.content#content
 			.menu
 				.tabs
-					.tab(sheet="tasks") Задачи
-					.tab.sel(sheet="servers") Сервера
+					.tab.sel(sheet="tasks") Задачи
+					.tab(sheet="clients") Сервера
 				.ctrl
 					| Запуск заданий
 					label.switch
