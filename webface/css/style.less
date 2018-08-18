@@ -104,7 +104,7 @@ body{
 			overflow: auto;
 			background: white;
 			font-size: 12px;
-			// display: none;
+			display: none;
 
 			&.sel{
 				display: block;
@@ -117,6 +117,56 @@ body{
 
 				&:nth-child(odd){
 					background: darken(@tasks-item-bg,5%);
+				}
+			}
+		}
+
+		> .menu,
+		> .tasks,
+		> .clients{
+
+			&.disabled{
+				pointer-events: none;
+				position: relative;
+
+				&:before{
+					position: absolute;
+					z-index: 10;
+					left: 0;
+					right: 0;
+					top: 0;
+					bottom: 0;
+					background: #ccc;
+					content: "Управляющий сервер не отвечает";
+					text-align: center;
+					vertical-align: middle;
+					line-height: 3em;
+					font-size: 20px;
+					opacity: .8;
+				}
+			}
+
+			.item{
+
+				&.disabled{
+					pointer-events: none;
+					position: relative;
+
+					&:before{
+						position: absolute;
+						z-index: 10;
+						left: 0;
+						right: 0;
+						top: 0;
+						bottom: 0;
+						background: #ccc;
+						content: "";
+						opacity: .6;
+					}
+
+					&.red{
+						background: red;
+					}
 				}
 			}
 		}
@@ -177,6 +227,10 @@ body{
 							bottom: 2px;
 							background: @tasks-item-time-bg;
 
+							label{
+								color: black;
+							}
+
 							input{
 								vertical-align: middle;
 								margin: 2px 0 0;
@@ -191,7 +245,7 @@ body{
 							}
 						}
 					}
-					.cmd_avg{
+					.cmd_args{
 						height: 110px;
 						margin: 0 120+130+20*2+100+25+1px 0 20+120px;
 						padding-left: 25px;
@@ -248,7 +302,6 @@ body{
 					}
 				}
 			}
-			// display: none;
 		}
 
 		> .clients{
@@ -259,6 +312,10 @@ body{
 				padding: 5px;
 				background: @servers-item-bg;
 				border: 1px solid @servers-item-border;
+
+				.disabled{
+
+				}
 
 				.head{
 					float: left;
@@ -384,6 +441,5 @@ body{
      -khtml-user-select: none; /* Konqueror HTML */
        -moz-user-select: none; /* Firefox */
         -ms-user-select: none; /* Internet Explorer/Edge */
-            user-select: none; /* Non-prefixed version, currently
-                                  supported by Chrome and Opera */
+            user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
 }
