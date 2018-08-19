@@ -1,12 +1,34 @@
 const fs=require('fs');
 const path=require('path');
 
-exports.task=Task=function(a)
+exports.task=Task=function(props)
 {
 	this.starttime=0;
 	this.runtime=0;
 
-	this.props={};
+	this.props=props;
+	// {
+	// 	alias:'testclient1',
+	// 	description: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Deleniti omnis, sit, earum rerum labore quo expedita mollitia hic culpa vitae.',
+	// 	enabled: true,
+	// 	active: true,
+	// 	env: {},
+	// 	pid: 123,
+	// 	ram: 30000000,
+	// 	server: 'test-server1',
+	// 	starttime: 0,
+	// 	runtime: 0,
+	// 	endtime: 0,
+	// 	cmd: '/bin/bash',
+	// 	args: ['script.php','first arg',23,'string text variable'],
+	// 	starttime:
+	// 		{
+	// 			type: 'interval',
+	// 			h: 0,
+	// 			m: 1,
+	// 			s: 30
+	// 		}
+	// };
 
 	this.ev=
 	{
@@ -15,6 +37,7 @@ exports.task=Task=function(a)
 		stderr: (data) => {},
 		// close: (err_code) => {},
 		exit: (err_code) => {},
+
 		update_prop: (prop,value) => {}
 	};
 
@@ -27,6 +50,8 @@ exports.task=Task=function(a)
 	{
 
 	};
+
+	this.toData=() => this.props;
 };
 
 exports.tasklist=TaskList=function()
@@ -34,28 +59,32 @@ exports.tasklist=TaskList=function()
 	var dbf=path.dirname(__dirname)+'/db.json',
 		tasks=JSON.parse(fs.readFileSync(dbf));
 
+	var tasks;
+
 	// tasks=[
 	// 		{
-	// 			alias: 'test-task1',
-	// 			description: 'test cron task .... debug',
-	// 			cmd: 'test-task.sh',
-	// 			args: ['3','3','3'],
-	// 			enabled: false,
-	// 			repeater: 0,
-	// 			multiple: false,
-	// 			priority: 'test',
-	// 			env: { NLS_LANG: 'RUS_NERUS', NLS_TIME: 'OLDTIME' }
-	// 		},
-	// 		{
-	// 			alias: 'test-task2',
-	// 			description: 'test cron task .... debug',
-	// 			cmd: 'test-task.sh',
-	// 			args: ['1','2','5'],
+	// 			alias:'testclient1',
+	// 			description: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Deleniti omnis, sit, earum rerum labore quo expedita mollitia hic culpa vitae.',
 	// 			enabled: true,
-	// 			repeater: 5,
+	// 			active: true,
+	// 			env: { NLS_LANG: 'RUS_NERUS', NLS_TIME: 'OLDTIME' },
+	// 			pid: 123,
+	// 			ram: 30000000,
+	// 			server: 'test-server1',
+	// 			starttime: 0,
+	// 			runtime: 0,
+	// 			endtime: 0,
+	// 			cmd: '/bin/bash',
+	// 			args: ['script.php','first arg',23,'string text variable'],
+	// 			starttime:
+	// 				{
+	// 					type: 'interval',
+	// 					h: 0,
+	// 					m: 1,
+	// 					s: 30
+	// 				},
 	// 			multiple: false,
-	// 			priority: 'test',
-	// 			env: { NLS_LANG: 'RUS_NERUS', NLS_TIME: 'OLDTIME' }
+	// 			priority: 'testclient3'
 	// 		}
 	// 	];
 
@@ -126,9 +155,24 @@ exports.tasklist=TaskList=function()
 		return false;
 	};
 
-	this.count=function()
+	this.count=() => tasks.length;
+
+	this.indexOfAlias=function(alias)
 	{
-		return tasks.length;
+		var r=-1;
+
+		tasks.some((e,i) =>
+		{
+			if(e instanceof Task && e.props.alias==alias)
+			{
+				r=i;
+				return true;
+			}
+
+			return false;
+		});
+
+		return r;
 	};
 
 	this.killall=function()
@@ -137,5 +181,7 @@ exports.tasklist=TaskList=function()
 		else tasks.forEach((task) => task.kill());
 	};
 
-	tasks=tasks.map((i,e) => { return this.add(e); });
+	this.toData=() => tasks.map(e => e.toData());
+
+	tasks=tasks.map(e => this.indexOfAlias(e.alias)<0 ? this.add(e) : null).filter(e => e!==null);
 };

@@ -2,17 +2,32 @@ debug=false;
 
 exports.client=Client=function(sock)
 {
-	this.starttime=0;
+	var $this=this;
 
 	this.socket=sock;
 
+	this.props=
+	{
+		starttime: (+new Date()/1000).toFixed(0),
+		alias:'testclient1',
+		enabled: true,
+		active: true,
+		ip: '0.0.0.0',
+		loadavg: [11.234,2.345,3.2],
+		uptime: 1117493,
+		tasks: [] // todo: aliases of tasks
+	};
+
 	this.ev=
 	{
+		connect: () => {},
+		disconnect: () => {},
+		error: () => {},
+
 		start: () => {},
 		stdout: (data) => {},
 		stderr: (data) => {},
-		// close: (err_code) => {},
-		exit: (err_code) => {}
+		exit: () => {}
 	};
 
 	this.socket.on('data',(data) =>
@@ -31,7 +46,7 @@ exports.client=Client=function(sock)
 			}
 			catch(e)
 			{
-				console.log('data parse error',data.toString(),debug ? e : '');
+				console.error('data parse error',data.toString(),debug ? e : '');
 			}
 
 			if(jdata!==undefined)
@@ -40,27 +55,18 @@ exports.client=Client=function(sock)
 			}
 		});
 	})
-	.on('error',() => { })
+	.on('error',(e) => { this.ev.error(e); })
 	.on('close',function(e)
 	{
-		// console.log('close',e);
-
-		// self.server.getConnections((e,cnt) => console.log(cnt) );
-		// console.log('cliof',self.clients.indexOf(this));
+		console.log('close',e);
 	});
 
-	this.setenv=function(a)
-	{
-		if(typeof a=='object') env=Object.assign(env,a);
-		else if(arguments.length>1) env[arguments[0]]=arguments[1];
-	};
+	this.toData=() => this.props;
 };
 
-exports.clientlist=function()
+exports.clientlist=ClientList=function()
 {
 	var clients=[];
-
-	this.autoremove=false; // remove on disconnect
 
 	this.add=function(sock)
 	{
@@ -112,18 +118,25 @@ exports.clientlist=function()
 		return false;
 	};
 
-	this.count=function()
-	{
-		return clients.length;
-	};
+	this.count=() => clients.length;
 
-	this.indexOfSocket=function(sock)
+	this.indexOfAlias=function(alias)
 	{
-		// if(sock instanceof Socket)
+		var r=-1;
+
+		clients.some((e,i) =>
 		{
-			// return clients.indexOf(sock);
-		}
+			if(e instanceof Client && e.props.alias==alias)
+			{
+				r=i;
+				return true;
+			}
 
-		return -1;
+			return false;
+		});
+
+		return r;
 	};
+
+	this.toData=() => clients.map(e => e.toData());
 };
