@@ -1,0 +1,18 @@
+doctype html
+html
+	head
+		title
+			| Octopus Control - test
+	body
+		| Octopus Control - test
+		br
+		br
+		textarea(id="log" cols="60" rows="30")
+		script
+			| var ax=new XMLHttpRequest();
+			| ax.open('GET','/json/test',true);
+			| ax.onreadystatechange=() =>
+			| {
+			|	if(ax.readyState==4) document.getElementById('log').value=ax.status==200 ? ax.responseText : ax.status+':'+ax.statusText;
+			| };
+			| ax.send();

@@ -1,41 +1,45 @@
 mixin task_time
 	.select
 		label
-			input(type="radio" value="interval")
-			| &nbsp;интервал
+			input.tt-radio-i(type="radio" value="interval")
+			| &nbsp;по интервалу
 		.input
-			input(type="text" value="10" maxlength="2")
+			input.tt-hi(type="text" maxlength="2" placeholder="hh")
 			|:
-			input(type="text" value="10" maxlength="2")
+			input.tt-mi(type="text" maxlength="2" placeholder="mm")
 			|:
-			input(type="text" value="10" maxlength="2")
+			input.tt-si(type="text" maxlength="2" placeholder="ss")
+			| &nbsp;
+			input.tt-ttl.w2(type="text" maxlength="4" placeholder="TTL")
 		label
-			input(type="radio" value="totime")
+			input.tt-radio-t(type="radio" value="totime")
 			| &nbsp;по времени
 		.input
-			input(type="text" value="10" maxlength="2")
+			input.tt-ht(type="text" maxlength="2" placeholder="hh")
 			|:
-			input(type="text" value="10" maxlength="2")
-			|:
-			input(type="text" value="10" maxlength="2")
+			input.tt-mt(type="text" maxlength="2" placeholder="mm")
 			| &nbsp; &nbsp;
-			input(type="text" value="10" maxlength="2")
+			input.tt-dt(type="text" maxlength="2" placeholder="dd")
 		label
-			input(type="radio" value="manual")
+			input.tt-radio-m(type="radio" value="manual")
 			| &nbsp;ручной
 		.input
-			input(type="button" value="OK")
+			input.tt-ok(type="button" value="OK")
 			| &nbsp;
-			input(type="button" value="Отмена")
+			input.tt-cancel(type="button" value="Отмена")
 
 mixin task_item
 	.item
 		.head
 			span.t-alias alias-of-task
-			.t-description.description Lorem ipsum dolor sit amet, consectetur adipisicing elit. Laborum atque ea consequatur alias ad dicta explicabo quibusdam, voluptatum repellat natus.
+			.t-description.description Lorem ipsum dolor sit amet
 		.wrap
 			.t-time.time
-				a.t-time-text(href="" onclick="javascript:return false") 10:30
+				| тип запуска:
+				.t-starttype интервал
+				br
+				br
+				a.t-time-text(href="" onclick="javascript:return false") 10:30:00 2d
 			.ctrl
 				input.t-kill(type="button" value="kill")
 				input.t-restart(type="button" value="restart")
@@ -70,19 +74,9 @@ mixin task_item
 			.cmd_args
 				xmp.t-env.env
 					| ENV1=Lorem ipsum dolor.
-					| ENV2=Lorem ipsum dolor sit amet.
-					| ENV3=Lorem ipsum.
-					| ENV4=Lorem ipsum dolor sit amet, consectetur adipisicing.
-					| ENV5=Lorem ipsum dolor sit amet.
-					| ENV5=Lorem ipsum dolor sit amet.
 				xmp.t-cmdargs
 					| /usr/bin/command
 					| /home/dev/script.php
-					| string arg1
-					| string  Lorem ipsum dolor.
-					| int arg3
-					| string arg4
-					| Lorem ipsum dolor sit amet, consectetur adipisicing.
 
 mixin client_item
 	.item

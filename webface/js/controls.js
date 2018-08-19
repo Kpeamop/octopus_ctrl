@@ -168,12 +168,16 @@ function Control(parent_item,parent_dom)
 	this.bindev=function(elementid,event,func)
 	{
 		if(typeof elementid!='string') return console.error('Invalid bindev argument elementid:',elementid);
-		if(typeof event!='string') return console.error('Invalid bindev argument event:',event);
+		if(typeof event!='string' && !(event instanceof Array)) return console.error('Invalid bindev argument event:',event);
 		if(typeof func!='function') return console.error('Invalid bindev argument function:',func);
 
 		if(elements[elementid]===undefined) return console.error('Invalid elementid:',elementid);
 
-		elements[elementid].addEventListener(event,func,false);
+		if(typeof event=='string') event=[event];
+
+		event.forEach((e) => elements[elementid].addEventListener(e,func,false));
+
+		return this;
 	};
 
 	/**
@@ -182,6 +186,15 @@ function Control(parent_item,parent_dom)
 	* @type {{}}
 	*/
 	var data={};
+
+	this.datas=() =>
+	{
+		var r={};
+
+		for(var i in data) r[i.toString().replace('_','')]=data[i];
+
+		return r;
+	}
 
 	this.data=function(key,val)
 	{
@@ -198,6 +211,8 @@ function Control(parent_item,parent_dom)
 			set: v => { data['_'+key]=v; func(v); },
 			get: () => data['_'+key]
 		});
+
+		return this;
 	};
 
 	this.loadData=function(data)

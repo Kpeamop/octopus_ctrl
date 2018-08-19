@@ -58,13 +58,43 @@ function Task(parent_item)
 	var $this=this;
 
 	var time=new TaskTime(this,this.element('time'));
-	// time.show();
+
+	time.ev.save=function()
+	{
+		$this.lockup=true;
+
+		parent_item.ev.up($this,'starttime',$this.data('starttime',this.datas()),() => $this.lockup=false);
+	};
 
 	this.bind('alias',		v => this.value('alias',v));
 	this.bind('description',v => this.value('description',v));
 	this.bind('pid',		v => this.value('pid',v));
 	this.bind('ram',		v => this.value('ram',(v/1024/1024).toFixed(1)));
 	this.bind('enabled',	v => this.value('enabled',v));
+	this.bind('starttime',	v =>
+	{
+		if(!time.lockup) time.loadData(v);
+
+		var leedzero=int => int<10 ? '0'+int : int;
+
+		switch(v.type)
+		{
+			case 'totime':
+				this.value('starttype','по времени');
+				this.value('time-text',leedzero(v.ht)+':'+leedzero(v.mt)+' '+leedzero(v.dt));
+			break;
+
+			case 'interval':
+				this.value('starttype','интервал');
+				this.value('time-text',leedzero(v.hi)+':'+leedzero(v.mi)+':'+leedzero(v.si)+'<br>'+'ttl:'+v.ttl);
+			break;
+
+			default:
+				this.value('starttype','ручной');
+				this.value('time-text','ручной');
+		}
+
+	});
 	this.bind('args',		v => this.value('cmdargs',this.data('cmd')+'\n'+v.join('\n')));
 	this.bind('execution',	v =>
 	{
@@ -87,6 +117,8 @@ function Task(parent_item)
 
 		parent_item.ev.up(this,'enabled',e.target.checked,() => this.lockup=false);
 	});
+
+	this.bindev('time-text','click',time.showmodal);
 
 	// animated self destruct
 
@@ -123,8 +155,64 @@ function TaskTime(parent_item,parent_dom)
 
 	TaskTime.parent.constructor.call(this,parent_item,parent_dom);
 
+	this.lockup=false;
+
 	var $this=this;
 
+	this.ev=
+	{
+		save: () => {}
+	};
 
+	this.element('radio-i')['name']=
+	this.element('radio-t')['name']=
+	this.element('radio-m')['name']='radio_'+Math.random().toString().substr(2);
+
+	this.bind('type',	v =>
+	{
+		if(!this.lockup)
+			switch(v)
+			{
+				case 'interval':
+					this.element('radio-i')['checked']=true;
+				break;
+
+				case 'totime':
+					this.element('radio-t')['checked']=true;
+				break;
+
+				default:
+					this.element('radio-m')['checked']=true;
+			}
+	})
+	.bindev('radio-i','change',() => this.data('type','interval'))
+	.bindev('radio-t','change',() => this.data('type','totime'))
+	.bindev('radio-m','change',() => this.data('type','manual'))
+	;
+	this.bind('ht',		v => this.value('ht',v))	.bindev('ht',['keyup','change'],	() => this.data('ht',this.value('ht')));
+	this.bind('mt',		v => this.value('mt',v))	.bindev('mt',['keyup','change'],	() => this.data('mt',this.value('mt')));
+	this.bind('dt',		v => this.value('dt',v))	.bindev('dt',['keyup','change'],	() => this.data('dt',this.value('dt')));
+	this.bind('hi',		v => this.value('hi',v))	.bindev('hi',['keyup','change'],	() => this.data('hi',this.value('hi')));
+	this.bind('mi',		v => this.value('mi',v))	.bindev('mi',['keyup','change'],	() => this.data('mi',this.value('mi')));
+	this.bind('si',		v => this.value('si',v))	.bindev('si',['keyup','change'],	() => this.data('si',this.value('si')));
+	this.bind('ttl',	v => this.value('ttl',v))	.bindev('ttl',['keyup','change'],	() => this.data('ttl',this.value('ttl')));
+
+	this.bindev('ok','click',() =>
+	{
+		this.ev.save.call(this);
+
+		this.lockup=false;
+		this.hide();
+	});
+	this.bindev('cancel','click',() =>
+	{
+		this.lockup=false;
+		this.hide();
+	});
+
+	this.showmodal=() =>
+	{
+		this.lockup=true;
+		this.show();
+	};
 }
-
