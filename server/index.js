@@ -4,6 +4,8 @@ const { task,tasklist }=require('./task');
 
 module.exports=Server=function()
 {
+	var $this=this;
+
 	this.config={ connection: { port: 6778 } };
 	this.proto={};
 
@@ -26,22 +28,17 @@ module.exports=Server=function()
 		return this;
 	};
 
-	this.run=function()
+	this.run=() =>
 	{
-		var self=this;
-
 		this.server=net.createServer()
 		.on('connection',(sock) =>
 		{
-			console.log('connect ');
+			console.log('connect from',sock.server._connectionKey);
 
-			sock.on('data',(data) => this.ev.data(data) );
-			sock.on('close',function()
-			{
-				self.ev.disconnect(this);
-			});
+			// sock.on('data',(data) => this.ev.data(data) );
+			// sock.on('close',() =>  this.ev.disconnect(this) );
 
-			this.clients.add(sock);
+			this.clients.add(sock).ev.connect();
 
 			this.ev.connect(sock);
 		})
@@ -50,7 +47,7 @@ module.exports=Server=function()
 					host: '0.0.0.0',
 					exclusive: true
 				},
-				() => { console.log('octopus server runing on',this.server.address()); }
+				() => { console.log('octopus server runing on','\t:'+this.config.connection.port); }
 		);
 	};
 };

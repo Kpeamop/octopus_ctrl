@@ -11,6 +11,15 @@ app.set('config',config)
 
 var web=new webface();
 
-web.set('config',config)
-	.set('proto',proto)
-	.run();
+try
+{
+	web.set('config',config)
+		.set('proto',proto)
+		.set('clients',app.clients)
+		.set('tasks',app.tasks)
+		.run();
+}
+catch(e)
+{
+	console.error('webface',e.message);
+}

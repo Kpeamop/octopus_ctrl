@@ -51,7 +51,7 @@ module.exports=Client=function()
 
 	this.run=function()
 	{
-		var self=this;
+		var $this=this;
 
 		this.client=net.Socket({
 								readable: true,
@@ -104,13 +104,13 @@ module.exports=Client=function()
 		})
 		.on('close',function()
 		{
-			console.log('closed. reconnecting...',self.count_reconnect);
+			console.log('closed. reconnecting...',$this.count_reconnect);
 
 			setTimeout(() => this.rconnect(),500);
 		})
 		.on('timeout',function()
 		{
-			console.log('timeout. reconnecting...',self.count_reconnect);
+			console.log('timeout. reconnecting...',$this.count_reconnect);
 
 			setTimeout(() => this.rconnect(),500);
 		})
@@ -118,13 +118,13 @@ module.exports=Client=function()
 		{
 			console.log('connected');
 
-			this.send(self.proto.identity());
+			this.send($this.proto.identity());
 		});
 
 		this.client.rconnect=function()
 		{
-			self.count_reconnect++;
-			this.connect(self.config.connection.port,self.config.connection.host);
+			$this.count_reconnect++;
+			this.connect($this.config.connection.port,$this.config.connection.host);
 		};
 
 		this.client.send=function(data)
