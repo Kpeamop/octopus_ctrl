@@ -1,6 +1,6 @@
 const http=require('http');
 const express=require('express');
-const bodyParser = require('body-parser');
+const bodyParser=require('body-parser');
 const less=require('less');
 const fs=require('fs');
 
@@ -8,11 +8,13 @@ module.exports=function()
 {
 	var $this=this;
 
-	this.config={ connection: {port_http: 1188} };
-	this.proto={};
-
-	this.tasks;
-	this.clients;
+	var private=
+	{
+		config: { connection: {port_http: 1188} },
+		cron: undefined,
+		tasks: undefined,
+		clients: undefined
+	};
 
 	var server=express();
 
@@ -79,11 +81,11 @@ module.exports=function()
 			break;
 
 			case 'clients':
-				data=$this.clients.toData();
+				data=private.clients.toData();
 			break;
 
 			case 'tasks':
-				data=$this.tasks.toData();
+				data=private.tasks.toData();
 			break;
 
 			case 'config':
@@ -119,18 +121,18 @@ module.exports=function()
 		switch(action)
 		{
 			case 'client':
-				if((i=$this.clients.indexOfAlias(req.body.alias))>=0)
+				if((i=private.clients.indexOfAlias(req.body.alias))>=0)
 				{
-					$this.clients.items(i).props[req.body.property]=req.body.value;
+					private.clients.items(i).props[req.body.property]=req.body.value;
 
 					data.result=true;
 				}
 			break;
 
 			case 'task':
-				if((i=$this.tasks.indexOfAlias(req.body.alias))>=0)
+				if((i=private.tasks.indexOfAlias(req.body.alias))>=0)
 				{
-					$this.tasks.items(i).props[req.body.property]=req.body.value;
+					private.tasks.items(i).props[req.body.property]=req.body.value;
 
 					data.result=true;
 				}
@@ -162,18 +164,18 @@ module.exports=function()
 
 	this.set=function(k,v)
 	{
-		this[k]=v;
+		private[k]=v;
 
 		return this;
 	};
 
 	this.run=function()
 	{
-		if(this.tasks===undefined || this.clients===undefined) throw new Error('Can\'t found "this.tasks" or "this.clients".');
+		if(private.tasks===undefined || private.clients===undefined || private.cron===undefined) throw new Error('Can\'t found private "cron" or "tasks" or "clients".');
 
-		server.listen(this.config.connection.port_http,() =>
+		server.listen(private.config.connection.port_http,() =>
 		{
-			console.log('webface server running on','\t:'+this.config.connection.port_http);
+			console.log('webface server running on','\t:'+private.config.connection.port_http);
 		});
 	};
 };
