@@ -1,23 +1,23 @@
 const net=require('net');
 const { client,clientlist }=require('./client');
 const { task,tasklist }=require('./task');
+// const cron=require('./cron');
 
 module.exports=Server=function()
 {
 	var $this=this;
 
 	this.config={ connection: { port: 6778 } };
-	this.proto={};
 
+	// this.cron=new cron();
 	this.tasks=new tasklist();
 	this.clients=new clientlist();
-	// this.runlist=new runlist(this.clients); // summary tasks of clients
 
 	this.ev=
 	{
 		data: () => {},
-		connect: (sock) => { console.log('c'/*,sock*/); },
-		disconnect: (sock) => { console.log('d'/*,sock*/); },
+		connect: (client) => { console.log('c'/*,client*/); },
+		disconnect: (client) => { console.log('d'/*,client*/); },
 		error: () => {},
 	};
 
@@ -31,16 +31,26 @@ module.exports=Server=function()
 	this.run=() =>
 	{
 		this.server=net.createServer()
-		.on('connection',(sock) =>
+		.on('connection',sock =>
 		{
 			console.log('connect from',sock.server._connectionKey);
 
-			// sock.on('data',(data) => this.ev.data(data) );
-			// sock.on('close',() =>  this.ev.disconnect(this) );
+			var c=new client(sock);
 
-			this.clients.add(sock).ev.connect();
+			var i;
 
-			this.ev.connect(sock);
+			if((i=this.clients.indexOfAlias(c.props.alias))>=0)
+			{
+				if(this.clients.items(i).props.active) return sock.end('{"error":"Already connect from '+sock.remoteAddress+'"}');
+
+				c.props.enabled=this.clients.items(i).props.enabled;
+				this.clients.replaceObject(c,i);
+			}
+			else this.clients.addObject(c);
+
+			c.ev.connect();
+
+			this.ev.connect(c);
 		})
 		.listen({
 					port: this.config.connection.port,

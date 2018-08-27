@@ -1,22 +1,41 @@
 debug=false;
 
-exports.client=Client=function(sock)
+const dns=require('dns');
+
+exports.client=Client=function(sock,props)
 {
 	var $this=this;
 
 	this.socket=sock;
 
-	this.props=
+	this.props_filter=(a) =>
 	{
-		starttime: (+new Date()/1000).toFixed(0),
-		alias:'testclient1',
-		enabled: true,
-		active: true,
-		ip: '0.0.0.0',
-		loadavg: [11.234,2.345,3.2],
-		uptime: 1117493,
-		tasks: [] // todo: aliases of tasks
+		var mask=
+				{
+					starttime: (+new Date()/1000).toFixed(0),
+					alias: sock.remoteAddress,
+					enabled: true,
+					active: true,
+					ip: sock.remoteAddress,
+					hostname: '',
+					loadavg: [0,0,0],
+					tasks: [] // todo: aliases of tasks
+				},
+			r={};
+
+		for(var i in mask)
+			if(a[i]===undefined) r[i]=mask[i];
+			else r[i]=a[i];
+
+		return r;
 	};
+
+	this.props=this.props_filter(props || {});
+
+	dns.reverse(this.props.ip,(err,hostname) =>
+	{
+		if(hostname && hostname.length>0) this.props.alias=this.props.hostname=hostname;
+	});
 
 	this.ev=
 	{
@@ -55,22 +74,23 @@ exports.client=Client=function(sock)
 			}
 		});
 	})
-	.on('error',(e) => { this.ev.error(e); })
-	.on('close',function(e)
+	.on('error',e => this.ev.error(e))
+	.on('close',e =>
 	{
-		console.log('close',e);
+		this.props.active=false;
+		this.ev.disconnect();
 	});
 
-	this.toData=() => this.props;
+	this.toData=() => this.props_filter(this.props);
 };
 
 exports.clientlist=ClientList=function()
 {
 	var clients=[];
 
-	this.add=function(sock)
+	this.add=function(sock,props)
 	{
-		var client=new Client(sock);
+		var client=new Client(sock,props || {});
 
 		this.addObject(client);
 
@@ -113,6 +133,18 @@ exports.clientlist=ClientList=function()
 			var i=clients.indexOf(client);
 
 			if(i>=0) return this.delete(i);
+		}
+
+		return false;
+	};
+
+	this.replaceObject=function(client,index)
+	{
+		if(client instanceof Client && typeof index=='number' && index<clients.length && index>=0)
+		{
+			clients.splice(index,1,client);
+
+			return true;
 		}
 
 		return false;

@@ -3,32 +3,47 @@ const path=require('path');
 
 exports.task=Task=function(props)
 {
-	this.starttime=0;
-	this.runtime=0;
+	this.props_filter=(a) =>
+	{
+		var mask=
+				{
+					alias: '',
+					description: '',
+					enabled: false,
+					active: true,
+					env: {},
+					pid: 0,
+					ram: 0,
+					server: '',
+					starttime: {
+						type: 'manual',
+						ht: '',
+						mt: '',
+						dt: '',
+						hi: '',
+						mi: '',
+						si: '',
+						ttl: 7200
+					},
+					execution: {
+						start: 0,
+						end: 0
+					},
+					cmd: '',
+					args: [],
+					multiple: false,
+					priority: ''
+				},
+			r={};
 
-	this.props=props;
-	// {
-	// 	alias:'testclient1',
-	// 	description: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Deleniti omnis, sit, earum rerum labore quo expedita mollitia hic culpa vitae.',
-	// 	enabled: true,
-	// 	active: true,
-	// 	env: {},
-	// 	pid: 123,
-	// 	ram: 30000000,
-	// 	server: 'test-server1',
-	// 	starttime: 0,
-	// 	runtime: 0,
-	// 	endtime: 0,
-	// 	cmd: '/bin/bash',
-	// 	args: ['script.php','first arg',23,'string text variable'],
-	// 	starttime:
-	// 		{
-	// 			type: 'interval',
-	// 			h: 0,
-	// 			m: 1,
-	// 			s: 30
-	// 		}
-	// };
+		for(var i in mask)
+			if(a[i]===undefined) r[i]=mask[i];
+			else r[i]=a[i];
+
+		return r;
+	};
+
+	this.props=this.props_filter(props);
 
 	this.ev=
 	{
@@ -51,7 +66,7 @@ exports.task=Task=function(props)
 
 	};
 
-	this.toData=() => this.props;
+	this.toData=() => this.props_filter(this.props); // ? props_filter
 };
 
 exports.tasklist=TaskList=function()
@@ -60,33 +75,6 @@ exports.tasklist=TaskList=function()
 		tasks=JSON.parse(fs.readFileSync(dbf));
 
 	var tasks;
-
-	// tasks=[
-	// 		{
-	// 			alias:'testclient1',
-	// 			description: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Deleniti omnis, sit, earum rerum labore quo expedita mollitia hic culpa vitae.',
-	// 			enabled: true,
-	// 			active: true,
-	// 			env: { NLS_LANG: 'RUS_NERUS', NLS_TIME: 'OLDTIME' },
-	// 			pid: 123,
-	// 			ram: 30000000,
-	// 			server: 'test-server1',
-	// 			starttime: 0,
-	// 			runtime: 0,
-	// 			endtime: 0,
-	// 			cmd: '/bin/bash',
-	// 			args: ['script.php','first arg',23,'string text variable'],
-	// 			starttime:
-	// 				{
-	// 					type: 'interval',
-	// 					h: 0,
-	// 					m: 1,
-	// 					s: 30
-	// 				},
-	// 			multiple: false,
-	// 			priority: 'testclient3'
-	// 		}
-	// 	];
 
 	// fs.writeFileSync(dbf,JSON.stringify(tasks));
 
