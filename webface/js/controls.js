@@ -167,11 +167,13 @@ function Control(parent_item,parent_dom)
 
 	this.bindev=function(elementid,event,func)
 	{
-		if(typeof elementid!='string') return console.error('Invalid bindev argument elementid:',elementid);
+		if(typeof elementid!='string' && !(elementid instanceof Array)) return console.error('Invalid bindev argument elementid:',elementid);
 		if(typeof event!='string' && !(event instanceof Array)) return console.error('Invalid bindev argument event:',event);
 		if(typeof func!='function') return console.error('Invalid bindev argument function:',func);
 
-		if(elements[elementid]===undefined) return console.error('Invalid elementid:',elementid);
+		if(typeof elementid=='string') elementid=[elementid];
+
+		if(elementid.some(i => elements[i]===undefined)) return console.error('Invalid elementid:',elementid);
 
 		if(typeof event=='string') event=[event];
 
