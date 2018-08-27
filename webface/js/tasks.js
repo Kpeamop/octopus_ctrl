@@ -98,9 +98,14 @@ function Task(parent_item)
 	this.bind('args',		v => this.value('cmdargs',this.data('cmd')+'\n'+v.join('\n')));
 	this.bind('execution',	v =>
 	{
-		this.value('starttime',v.start);
-		this.value('runtime',totime((+new Date()/1000).toFixed(0)-v.start));
-		this.value('endtime','-');
+		var end=parseInt(v.end);
+		var start=parseInt(v.start);
+		this.value('starttime',timeFormat(start,'d.m.y h:i:s'));
+		this.value('runtime',totime((+new Date()/1000).toFixed(0)-start));
+		this.value('endtime',end>0 ? timeFormat(end,'d.m.y h:i:s') : '- (running)');
+
+		this.value('restart',end>0 ? 'start' : 'restart');
+		this.element('kill').disabled=end>0;
 	});
 	this.bind('env',v =>
 	{
