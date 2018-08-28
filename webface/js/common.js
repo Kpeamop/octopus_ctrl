@@ -24,8 +24,10 @@ $(document).ready(() =>
 		{
 			$('.tab').removeClass('sel').filter(this).addClass('sel');
 			$('.tabsheet').removeClass('sel').filter('.'+this.attributes.sheet.value).addClass('sel');
+
+			history.pushState({},'','#'+this.attributes.sheet.value);
 		})
-		.filter('.sel').each((i,e) => $('.tabsheet').removeClass('sel').filter('.'+e.attributes.sheet.value).addClass('sel') );
+		.filter('[sheet='+(location.hash.replace('#','') || 'tasks')+']').trigger('click');
 
 	tasks.ev.up=(task,property,value,unlock_cb) =>
 	{
