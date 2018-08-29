@@ -1,5 +1,6 @@
 const http=require('http');
 const express=require('express');
+const compress=require('compression');
 const bodyParser=require('body-parser');
 const less=require('less');
 const fs=require('fs');
@@ -19,6 +20,8 @@ module.exports=function()
 	var server=express();
 
 	server.set('views',__dirname);
+
+	server.use(compress());
 
 	server.use(bodyParser.json());
 	server.use(bodyParser.urlencoded({ extended: true }));
@@ -138,6 +141,10 @@ module.exports=function()
 				}
 			break;
 
+			case 'cron':
+
+			break;
+
 			case 'config':
 
 			break;
@@ -171,7 +178,7 @@ module.exports=function()
 
 	this.run=function()
 	{
-		if(private.tasks===undefined || private.clients===undefined || private.cron===undefined) throw new Error('Can\'t found private "cron" or "tasks" or "clients".');
+		if(private.tasks===undefined || private.clients===undefined/* || private.cron===undefined*/) throw new Error('Can\'t found private "cron" or "tasks" or "clients".');
 
 		server.listen(private.config.connection.port_http,() =>
 		{
