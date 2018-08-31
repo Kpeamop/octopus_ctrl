@@ -6,7 +6,7 @@ $(document).ready(() =>
 	extend(Clients,Control);
 	extend(Client,Control);
 
-	// var tasks,clients;
+	var tasks,clients;
 
 	try
 	{
@@ -29,37 +29,8 @@ $(document).ready(() =>
 		})
 		.filter('[sheet='+(location.hash.replace('#','') || 'tasks')+']').trigger('click');
 
-	tasks.ev.up=(task,property,value,unlock_cb) =>
-	{
-		var a=new XMLHttpRequest();
-
-		a.open('POST','/set/task');
-		a.setRequestHeader('Content-Type','application/json');
-
-		try
-		{
-			a.send(JSON.stringify({alias:task.data('alias'),property,value}));
-		}
-		catch(e) {};
-
-		unlock_cb();
-	};
-
-	clients.ev.up=(client,property,value,unlock_cb) =>
-	{
-		var a=new XMLHttpRequest();
-
-		a.open('POST','/set/client');
-		a.setRequestHeader('Content-Type','application/json');
-
-		try
-		{
-			a.send(JSON.stringify({alias:client.data('alias'),property,value}));
-		}
-		catch(e) {};
-
-		unlock_cb();
-	};
+	tasks.ev.update=(task,property,value,unlock_cb) 	=> jsonRequest('/set/task',{alias:task.data('alias'),property,value},unlock_cb);
+	clients.ev.update=(client,property,value,unlock_cb)	=> jsonRequest('/set/client',{alias:client.data('alias'),property,value},unlock_cb);
 
 	var refresh_data=() =>
 	{

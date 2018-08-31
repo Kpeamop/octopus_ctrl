@@ -9,7 +9,9 @@ function Tasks(parent_item)
 
 	this.ev=
 	{
-		up: (task,prop,newvalue,cb) => { console.log(task,prop,newvalue,cb);  }
+		update:		(task,property,value,cb)	=> {},
+		kill:		(task)						=> {},
+		restart:	(task)						=> {}
 	};
 
 	this.arrange=(jdata) =>
@@ -42,7 +44,19 @@ function Tasks(parent_item)
 		});
 
 		// insert
-		jdata.forEach(e => (new Task(this)).loadData(e));
+		jdata.forEach(e =>
+		{
+			var task=new Task(this);
+
+			task.ev=
+			{
+				update:		(property,value,cb) => this.ev.update(task,property,value,cb),
+				kill:		() => {},
+				restart:	() => {}
+			};
+
+			task.loadData(e);
+		});
 	};
 }
 
@@ -55,15 +69,22 @@ function Task(parent_item)
 
 	this.lockup=false;
 
-	var $this=this;
+	this.ev=
+	{
+		update:		(property,value,cb) => {},
+		kill:		() => {},
+		restart:	() => {}
+	};
+
+	// var $this=this;
 
 	var time=new TaskTime(this,this.element('time'));
 
-	time.ev.save=function()
+	time.ev.save=() =>
 	{
-		$this.lockup=true;
+		this.lockup=true;
 
-		parent_item.ev.up($this,'starttime',$this.data('starttime',this.datas()),() => $this.lockup=false);
+		this.ev.update('starttime',this.data('starttime',time.datas()),() => this.lockup=false);
 	};
 
 	this.bind('alias',		v => this.value('alias',v));
@@ -120,10 +141,13 @@ function Task(parent_item)
 	{
 		this.lockup=true;
 
-		parent_item.ev.up(this,'enabled',e.target.checked,() => this.lockup=false);
+		this.ev.update('enabled',e.target.checked,() => this.lockup=false);
 	});
 
 	this.bindev('time-text','click',time.showmodal);
+
+	this.bindev('kill','click',this.ev.kill);
+	this.bindev('restart','click',this.ev.restart);
 
 	// animated self destruct
 
@@ -162,7 +186,7 @@ function TaskTime(parent_item,parent_dom)
 
 	this.lockup=false;
 
-	var $this=this;
+	// var $this=this;
 
 	this.ev=
 	{

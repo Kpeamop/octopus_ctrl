@@ -21,3 +21,34 @@ function timeFormat(ts,format)
 
 	return format.replace(/[ymdhis]/g,i => dt({y:'FullYear',m:'Month',d:'Date',h:'Hours',i:'Minutes',s:'Seconds'}[i]) );
 }
+
+function jsonRequest(url,data,async_cb)
+{
+	var a=new XMLHttpRequest();
+
+	a.open('POST',url,async_cb instanceof Function);
+	a.setRequestHeader('Content-Type','application/json');
+
+	if(async_cb instanceof Function)
+	{
+		a.onload=() =>
+		{
+			if(a.readyState===4) async_cb(false,a.responseText);
+		};
+		a.onerror=() =>
+		{
+			async_cb(true);
+		};
+	}
+
+	try
+	{
+		a.send(JSON.stringify(data));
+
+		return async_cb instanceof Function ? true : a.responseText;
+	}
+	catch(e)
+	{
+		console.error('Invalid jsonRequest',url);
+	}
+}

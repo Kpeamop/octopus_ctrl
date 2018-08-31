@@ -9,7 +9,7 @@ function Clients(parent_item)
 
 	this.ev=
 	{
-		up: (client,prop,newvalue,cb) => { console.log(client,prop,newvalue,cb);  }
+		update: (client,property,newvalue,cb) => {}
 	};
 
 	this.arrange=(jdata) =>
@@ -42,7 +42,17 @@ function Clients(parent_item)
 		});
 
 		// insert
-		jdata.forEach(e => (new Client(this)).loadData(e));
+		jdata.forEach(e =>
+		{
+			var client=new Client(this);
+
+			client.ev=
+			{
+				update:		(property,value,cb) => this.ev.update(client,property,value,cb)
+			};
+
+			client.loadData(e);
+		});
 	};
 }
 
@@ -54,6 +64,11 @@ function Client(parent_item)
 	Client.parent.constructor.call(this,parent_item);
 
 	this.lockup=false;
+
+	this.ev=
+	{
+		update:	(property,value,cb) => {}
+	};
 
 	// var $this=this;
 
@@ -73,7 +88,7 @@ function Client(parent_item)
 	{
 		this.lockup=true;
 
-		parent_item.ev.up(this,'enabled',e.target.checked,() => this.lockup=false);
+		this.ev.update('enabled',e.target.checked,() => this.lockup=false);
 	});
 
 	// animated self destruct
