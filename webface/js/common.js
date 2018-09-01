@@ -29,8 +29,17 @@ $(document).ready(() =>
 		})
 		.filter('[sheet='+(location.hash.replace('#','') || 'tasks')+']').trigger('click');
 
-	tasks.ev.update=(task,property,value,unlock_cb) 	=> jsonRequest('/set/task',{alias:task.data('alias'),property,value},unlock_cb);
+	tasks.ev=
+	{
+		update:		(task,property,value,unlock_cb)	=> jsonRequest('/set/task',{alias:task.data('alias'),property,value},unlock_cb),
+		kill: 		(task)	=> jsonRequest('/do/kill',{alias:task.data('alias')},() => {}),
+		restart:	(task)	=> jsonRequest(parseInt(task.data('execution').end)>0 ? '/do/start' : '/do/restart',{alias:task.data('alias')},() => {}),
+	};
+
 	clients.ev.update=(client,property,value,unlock_cb)	=> jsonRequest('/set/client',{alias:client.data('alias'),property,value},unlock_cb);
+
+	$('#enabled').on('click',e => jsonRequest('/set/enabled',{'value':e.target.checked},() => {}) );
+	$('#killall').on('click',e => jsonRequest('/do/kill/all',{},() => {}) );
 
 	var refresh_data=() =>
 	{

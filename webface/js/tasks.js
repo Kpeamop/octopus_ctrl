@@ -51,8 +51,8 @@ function Tasks(parent_item)
 			task.ev=
 			{
 				update:		(property,value,cb) => this.ev.update(task,property,value,cb),
-				kill:		() => {},
-				restart:	() => {}
+				kill:		() => this.ev.kill(task),
+				restart:	() => this.ev.restart(task)
 			};
 
 			task.loadData(e);
@@ -146,8 +146,8 @@ function Task(parent_item)
 
 	this.bindev('time-text','click',time.showmodal);
 
-	this.bindev('kill','click',this.ev.kill);
-	this.bindev('restart','click',this.ev.restart);
+	this.bindev('kill','click',		() => this.ev.kill());
+	this.bindev('restart','click',	() => this.ev.restart());
 
 	// animated self destruct
 
