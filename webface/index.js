@@ -1,7 +1,6 @@
 const http=require('http');
 const express=require('express');
 const compress=require('compression');
-const bodyParser=require('body-parser');
 const less=require('less');
 const fs=require('fs');
 
@@ -23,8 +22,8 @@ module.exports=function()
 
 	server.use(compress());
 
-	server.use(bodyParser.json());
-	server.use(bodyParser.urlencoded({ extended: true }));
+	server.use(express.json());
+	server.use(express.urlencoded({ extended: true }));
 
 	server.use('/js',express.static(__dirname+'/js'));
 	server.use('/images',express.static(__dirname+'/images'));
@@ -44,7 +43,7 @@ module.exports=function()
 
 	server.get(/^\/(.+\.html)?$/,function(req,res)
 	{
-		var m=req.url.match(/\/([-_a-zA-Z0-9]*)\.html/),
+		var m=req.url.match(/^\/([-_a-zA-Z0-9]*)\.html$/),
 			file=m instanceof Array && m[1]!==undefined ? m[1] : 'index',
 			vars={};
 
@@ -72,7 +71,7 @@ module.exports=function()
 
 	server.get(/^\/json\/(.+)$/,function(req,res)
 	{
-		var m=req.url.match(/\/json\/([-_a-zA-Z0-9]*)(?:\/([-_a-zA-Z0-9]+))?/),
+		var m=req.url.match(/^\/json\/([-_a-zA-Z0-9]*)(?:\/([-_a-zA-Z0-9]+))?$/),
 			action=m instanceof Array && m[1]!==undefined ? m[1] : 'index';
 
 		var data;
@@ -116,7 +115,7 @@ module.exports=function()
 
 	server.post(/^\/set\/(.+)$/,function(req,res)
 	{
-		var m=req.url.match(/\/set\/([-_a-zA-Z0-9]*)(?:\/([-_a-zA-Z0-9]+))?/),
+		var m=req.url.match(/^\/set\/([-_a-zA-Z0-9]*)(?:\/([-_a-zA-Z0-9]+))?$/),
 			action=m instanceof Array && m[1]!==undefined ? m[1] : 'index';
 
 		var data={ result: false };
@@ -141,18 +140,69 @@ module.exports=function()
 				}
 			break;
 
-			case 'cron':
+			case 'enabled':
 
 			break;
 
 			case 'config':
 
 			break;
+		}
 
-			default:
-				res.status(404);
-			 	res.send('404 - not found');
-			 	return;
+		res.status(200);
+		res.type('application/json');
+
+		res.send(JSON.stringify(data));
+	});
+
+	server.post(/^\/do\/(.+)$/,function(req,res)
+	{
+		var m=req.url.match(/^\/do\/([-_a-zA-Z0-9]+)(?:\/([-_a-zA-Z0-9]+))?$/),
+			action=m instanceof Array && m[1]!==undefined ? m[1] : 'index';
+
+		var data={ result: false };
+
+		switch(action)
+		{
+			case 'start':
+				var i;
+				if(i=private.tasks.itemOfAlias(req.body.alias))
+				{
+					i.run();
+
+					data.result=true;
+				}
+			break;
+
+			case 'kill':
+				if(m[2]!==undefined && m[2]=='all')
+				{
+					private.tasks.killall();//killall
+
+					data.result=true;
+				}
+				else
+				{
+					var i;
+					if(i=private.tasks.itemOfAlias(req.body.alias))
+					{
+						i.kill();
+
+						data.result=true;
+					}
+				}
+			break;
+
+			case 'restart':
+				var i;
+				if(i=private.tasks.itemOfAlias(req.body.alias))
+				{
+					i.kill();
+					setTimeout(i.run,500);
+
+					data.result=true;
+				}
+			break;
 		}
 
 		res.status(200);

@@ -1,3 +1,5 @@
+debug=false;
+
 const fs=require('fs');
 const path=require('path');
 
@@ -56,17 +58,17 @@ exports.task=Task=function(props)
 		update_prop: (prop,value) => {}
 	};
 
-	this.kill=function()
+	this.kill=() =>
 	{
-
+		console.log('kill',this.props.alias);
 	};
 
-	this.run=function()
+	this.run=() =>
 	{
-
+		console.log('run',this.props.alias);
 	};
 
-	this.toData=() => this.props_filter(this.props); // ? props_filter
+	this.toData=() => this.props_filter(this.props);
 };
 
 exports.tasklist=TaskList=function()
@@ -84,6 +86,7 @@ exports.tasklist=TaskList=function()
 		stdout: (data,task) => {},
 		stderr: (data,task) => {},
 		exit: (err_code,task) => {},
+
 		update_prop: (prop,value,task) => {}
 	};
 
@@ -163,10 +166,19 @@ exports.tasklist=TaskList=function()
 		return r;
 	};
 
+	this.itemOfAlias=function(alias)
+	{
+		var i=this.indexOfAlias(alias);
+
+		if(i>=0) return this.items(i);
+		else return null;
+	};
+
 	this.killall=function()
 	{
-		if(this.autoremove)	while(tasks.length>0) tasks.pop().kill();
-		else tasks.forEach((task) => task.kill());
+		console.log('killall');
+		// if(this.autoremove)	while(tasks.length>0) tasks.pop().kill();
+		// else tasks.forEach((task) => task.kill());
 	};
 
 	this.toData=() => tasks.map(e => e.toData());
