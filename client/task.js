@@ -2,70 +2,96 @@ debug=true;
 
 const { spawn }=require('child_process');
 
-exports.task=Task=function(cmd,args=[])
+exports.task=Task=function(alias,cmd,args=[])
 {
-	var env=Object.assign({},process.env),
-		app;
+	var private=
+	{
+		alias,
+		cmd,
+		args,
+		env: Object.assign({},process.env),
+		app: null,
+		starttime: 0,
+		endtime: 0
+	};
 
-	this.starttime=0;
-	this.runtime=0;
+	Object.defineProperty(this,'alias',		{ get: () => private.alias });
+	Object.defineProperty(this,'starttime',	{ get: () => private.starttime });
+	Object.defineProperty(this,'endtime',	{ get: () => private.endtime });
+	Object.defineProperty(this,'pid',		{ get: () => private.app.pid });
 
 	this.ev=
 	{
-		start: (cmd,args,startts) => { if(debug) console.log('start:',cmd,args,startts); },
+		start: (cmd,args) =>
+		{
+			private.starttime=+new Date();
+			private.endtime=0;
+
+			if(debug) console.log('start:',cmd,args);
+		},
 		stdout: (text) => { if(debug) console.log('stdout:',text); },
 		stderr: (text) => { if(debug) console.log('stderr:',text); },
 		// close: (err_code) => {},
-		exit: (err_code,duration,endts) => { if(debug) console.log('exit:',err_code); }
+		exit: (err_code) =>
+		{
+			private.endtime=+new Date();
+
+			if(debug) console.log('exit:',err_code);
+		},
+
+		kill: () =>
+		{
+			if(debug) console.log('kill');
+		}
 	};
 
 	this.kill=function()
 	{
-		this.app.kill();
+		private.app.kill();
+
+		this.ev.kill(this);
 	};
 
 	this.setenv=function(a)
 	{
-		if(typeof a=='object') env=Object.assign(env,a);
-		else if(arguments.length>1) env[arguments[0]]=arguments[1];
+		if(typeof a=='object') private.env=Object.assign(private.env,a);
+		else if(arguments.length>1) private.env[arguments[0]]=arguments[1];
 	};
 
 	this.run=function()
 	{
-		this.starttime=+new Date();
+		private.app=spawn(cmd,args,{ env: private.env });
 
-		this.app=spawn(cmd,args,{ env: this.env });
+		private.app.stdout.on('data',(text) => this.ev.stdout(text.toString()) );
+		private.app.stderr.on('data',(text) => this.ev.stderr(text.toString()) );
+		// private.app.on('close',(err_code) => { this.ev.close(err_code); });
+		private.app.on('exit',(err_code) => this.ev.exit(err_code));
 
-		this.app.stdout.on('data',(text) => { this.ev.stdout(text.toString()); });
-		this.app.stderr.on('data',(text) => { this.ev.stderr(text.toString()); });
-		// this.app.on('close',(err_code) => { this.ev.close(err_code); });
-		this.app.on('exit',(err_code) =>
-		{
-			this.runtime=+new Date()-this.starttime;
-			this.ev.exit(err_code,this.runtime,+new Date());
-		});
-
-		this.ev.start(cmd,args,this.starttime);
+		this.ev.start(cmd,args);
 	};
+
+	this.toData=() => { return { alias:private.alias, starttime:private.starttime, endtime:private.endtime, pid: app.pid||0 }; };
 };
 
 exports.tasklist=TaskList=function()
 {
 	var tasks=[];
 
-	this.autoremove=false; // remove on exit
+	this.autoremove=true; // remove on exit
 
 	this.ev=
 	{
-		start: (cmd,args,startts,task) => {},
-		stdout: (data,task) => {},
-		stderr: (data,task) => {},
-		exit: (err_code,duration,endts,task) => {}
+		start:	(cmd,args,startts,task) 		=> {},
+		stdout:	(data,task) 					=> {},
+		stderr:	(data,task) 					=> {},
+		exit:	(err_code,endts,task) 			=> {},
+
+		kill:	(task)							=> {}
 	};
 
-	this.add=function(cmd,args=[],env_extra={})
+	this.add=function(alias,cmd,args=[],env_extra={})
 	{
-		var task=new Task(cmd,args);
+		var task=new Task(alias,cmd,args);
 
 		task.setenv(env_extra);
 
@@ -79,10 +105,10 @@ exports.tasklist=TaskList=function()
 		if(task instanceof Task)
 		{
 			var temp_start=task.ev.start;
-			task.ev.start=(cmd,args,startts) =>
+			task.ev.start=(cmd,args) =>
 			{
-				temp_start(cmd,args,startts);
-				this.ev.start(cmd,args,startts,task);
+				temp_start(cmd,args);
+				this.ev.start(cmd,args,task.starttime,task);
 			};
 
 			var temp_stdout=task.ev.stdout;
@@ -100,10 +126,19 @@ exports.tasklist=TaskList=function()
 			};
 
 			var temp_exit=task.ev.exit;
-			task.ev.exit=(err_code,duration,endts) =>
+			task.ev.exit=(err_code) =>
 			{
-				temp_exit(err_code,duration,endts);
-				this.ev.exit(err_code,duration,endts,task);
+				if(this.autoremove) this.deleteObject(task);
+
+				temp_exit(err_code);
+				this.ev.exit(err_code,task.endtime,task);
+			};
+
+			var temp_kill=task.ev.kill;
+			task.ev.kill=() =>
+			{
+				temp_kill();
+				this.ev.kill(task);
 			};
 
 			tasks.push(task);
@@ -143,9 +178,30 @@ exports.tasklist=TaskList=function()
 		return false;
 	};
 
-	this.count=function()
+	this.indexOfAlias=function(alias)
 	{
-		return tasks.length;
+		var r=-1;
+
+		tasks.some((e,i) =>
+		{
+			if(e instanceof Task && e.alias==alias)
+			{
+				r=i;
+				return true;
+			}
+
+			return false;
+		});
+
+		return r;
+	};
+
+	this.itemOfAlias=function(alias)
+	{
+		var i=this.indexOfAlias(alias);
+
+		if(i>=0) return this.items(i);
+		else return null;
 	};
 
 	this.killall=function()
@@ -153,4 +209,8 @@ exports.tasklist=TaskList=function()
 		if(this.autoremove)	while(tasks.length>0) tasks.pop().kill();
 		else tasks.forEach((task) => task.kill());
 	};
+
+	this.count=() => tasks.length;
+
+	this.toData=() => tasks.map(e => e.toData());
 };
