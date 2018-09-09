@@ -17,10 +17,10 @@ module.exports=Client=function()
 
 	private.tasks.ev=
 	{
-		start:	(cmd,args,starttime,task)	=> private.client.send({ action:'start',	alias:task.alias, cmd,args,starttime }),
+		start:	(cmd,args,starttime,task)	=> private.client.send({ action:'start',	alias:task.alias, starttime, pid:task.pid }),
 		stdout:	(text,task)					=> private.client.send({ action:'stdout',	alias:task.alias, text }),
 		stderr:	(text,task)					=> private.client.send({ action:'stderr',	alias:task.alias, text }),
-		exit:	(err_code,endtime,task)		=> private.client.send({ action:'exit',		alias:task.alias, err_code,endtime }),
+		exit:	(err_code,endtime,task)		=> private.client.send({ action:'exit',		alias:task.alias, endtime, err_code }),
 
 		kill:	(task)						=> {} //private.client.send({ action:'kill',		alias:task.alias })
 	};
@@ -39,33 +39,45 @@ module.exports=Client=function()
 		private.client=net.Socket({ readable: true,writable: true })
 		.on('data',(data) =>
 		{
-			try
+			data.toString().split(String.fromCharCode(10)).forEach((e,i) =>
 			{
-				jdata=JSON.parse(data.toString());
-			}
-			catch(e)
-			{
-				console.log('data error',e,data.toString());
-			}
+				if(!e) return;
 
-			switch(jdata.action)
-			{
-				case 'run':
-					private.tasks.add(jdata.cmd,jdata.args,jdata.env).run();
-				break;
+				var jdata;
 
-				case 'kill':
-					var i;
+				try
+				{
+					jdata=JSON.parse(e);
+				}
+				catch(e)
+				{
+					return console.error('data parse error',data.toString(),debug ? e : '');
+				}
 
-					if(i=private.tasks.itemOfAlias(jdata.alias)) i.kill();
-				break;
+				var action=jdata.action,
+					task=jdata.alias || '',
+					text=jdata.text || '',
+					err_code=jdata.err_code || '';
 
-				case 'killall':
-					private.tasks.killall();
-				break;
+				switch(jdata.action)
+				{
+					case 'run':
+						private.tasks.add(jdata.props.alias,jdata.props.cmd,jdata.props.args,jdata.props.env).run();
+					break;
 
-				default: console.log(jdata);
-			}
+					case 'kill':
+						var i;
+
+						if(i=private.tasks.itemOfAlias(jdata.alias)) i.kill();
+					break;
+
+					case 'killall':
+						private.tasks.killall();
+					break;
+
+					default: console.log('Inknown action:',action,task,debug ? jdata : '');
+				}
+			});
 		})
 		.on('drain',() =>
 		{
@@ -109,7 +121,7 @@ module.exports=Client=function()
 
 			private.tm_loadavg=setInterval(() => private.client.send({ action: 'loadavg', value:os.loadavg() }),5000);
 
-			private.client.send({ action:'status', tasks:private.tasks.toData() });
+			private.client.send({ action:'status', tasks:private.tasks.toData(), loadavg: os.loadavg(), cpus: os.cpus().length });
 		});
 
 		private.client.rconnect=function()

@@ -12,7 +12,8 @@ exports.task=Task=function(alias,cmd,args=[])
 		env: Object.assign({},process.env),
 		app: null,
 		starttime: 0,
-		endtime: 0
+		endtime: 0,
+		memory: 0
 	};
 
 	Object.defineProperty(this,'alias',		{ get: () => private.alias });
@@ -24,7 +25,7 @@ exports.task=Task=function(alias,cmd,args=[])
 	{
 		start: (cmd,args) =>
 		{
-			private.starttime=+new Date();
+			private.starttime=(+new Date()/1000).toFixed(0);
 			private.endtime=0;
 
 			if(debug) console.log('start:',cmd,args);
@@ -34,7 +35,7 @@ exports.task=Task=function(alias,cmd,args=[])
 		// close: (err_code) => {},
 		exit: (err_code) =>
 		{
-			private.endtime=+new Date();
+			private.endtime=(+new Date()/1000).toFixed(0);
 
 			if(debug) console.log('exit:',err_code);
 		},
@@ -60,17 +61,27 @@ exports.task=Task=function(alias,cmd,args=[])
 
 	this.run=function()
 	{
-		private.app=spawn(cmd,args,{ env: private.env });
+		try
+		{
+			private.app=spawn(cmd,args,{ env: private.env });
 
-		private.app.stdout.on('data',(text) => this.ev.stdout(text.toString()) );
-		private.app.stderr.on('data',(text) => this.ev.stderr(text.toString()) );
-		// private.app.on('close',(err_code) => { this.ev.close(err_code); });
-		private.app.on('exit',(err_code) => this.ev.exit(err_code));
+			private.app.stdout.on('data',text => this.ev.stdout(text.toString()) );
+			private.app.stderr.on('data',text => this.ev.stderr(text.toString()) );
+			// private.app.on('close',(err_code) => { this.ev.close(err_code); });
+			private.app.on('exit',err_code => this.ev.exit(err_code));
+			private.app.on('error',err => console.log(err));
 
-		this.ev.start(cmd,args);
+			this.ev.start(cmd,args);
+		}
+		catch(e)
+		{
+			// if(debug) console.log(e);
+
+			// this.ev.stderr(e.toString());
+		}
 	};
 
-	this.toData=() => { return { alias:private.alias, starttime:private.starttime, endtime:private.endtime, pid: app.pid||0 }; };
+	this.toData=() => { return { alias:private.alias, starttime:private.starttime, endtime:private.endtime, pid:private.app.pid||0, memory:private.memory }; };
 };
 
 exports.tasklist=TaskList=function()
