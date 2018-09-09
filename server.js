@@ -1,4 +1,3 @@
-const proto=require('./proto');
 const config=require('./config');
 const server=require('./server/');
 const webface=require('./webface/');
@@ -6,17 +5,16 @@ const webface=require('./webface/');
 var app=new server();
 
 app.set('config',config)
-	.set('proto',proto)
 	.run();
 
 var web=new webface();
 
 try
 {
-	web.set('config',config)
-		.set('proto',proto)
-		.set('clients',app.clients)
-		.set('tasks',app.tasks)
+	web.set('config',	config)
+		.set('cron',	app.cron)
+		.set('clients',	app.clients)
+		.set('tasks',	app.tasks)
 		.run();
 }
 catch(e)
