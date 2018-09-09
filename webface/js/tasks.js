@@ -92,6 +92,7 @@ function Task(parent_item)
 	this.bind('pid',		v => this.value('pid',v));
 	this.bind('ram',		v => this.value('ram',(v/1024/1024).toFixed(1)));
 	this.bind('enabled',	v => this.value('enabled',v));
+	this.bind('client',		v => this.value('client',v));
 	this.bind('starttime',	v =>
 	{
 		if(!time.lockup) time.loadData(v);
@@ -121,12 +122,14 @@ function Task(parent_item)
 	{
 		var end=parseInt(v.end);
 		var start=parseInt(v.start);
-		this.value('starttime',timeFormat(start,'d.m.y h:i:s'));
-		this.value('runtime',totime((+new Date()/1000).toFixed(0)-start));
-		this.value('endtime',end>0 ? timeFormat(end,'d.m.y h:i:s') : '- (running)');
+		var pid=this.data('pid');
 
-		this.value('restart',end>0 ? 'start' : 'restart');
-		this.element('kill').disabled=end>0;
+		this.value('starttime',	pid>0 ? timeFormat(start,'d.m.y h:i:s') : '---');
+		this.value('runtime',	pid>0 ? totime((+new Date()/1000).toFixed(0)-start) : '---');
+		this.value('endtime',	pid>0 ? timeFormat(end,'d.m.y h:i:s') : '---');
+
+		this.value('restart',	pid>0 ? 'restart' : 'start');
+		this.element('kill').disabled=!pid;
 	});
 	this.bind('env',v =>
 	{
