@@ -1,4 +1,4 @@
-debug=false;
+debug=true;
 
 const fs=require('fs');
 const path=require('path');
@@ -16,7 +16,7 @@ exports.task=Task=function(props)
 					env: {},
 					pid: 0,
 					ram: 0,
-					server: '',
+					client: '',
 					starttime: {
 						type: 'manual',
 						ht: '',
@@ -49,23 +49,32 @@ exports.task=Task=function(props)
 
 	this.ev=
 	{
-		start: () => {},
-		stdout: (data) => {},
-		stderr: (data) => {},
-		// close: (err_code) => {},
-		exit: (err_code) => {},
+	// 	start: () => {},
+	// 	stdout: (data) => {},
+	// 	stderr: (data) => {},
+	// 	// close: (err_code) => {},
+	// 	exit: (err_code) => {},
+
+		kill: () => {},
+		run: () => {},
 
 		update_prop: (prop,value) => {}
 	};
 
 	this.kill=() =>
 	{
-		console.log('kill',this.props.alias);
+		if(debug) console.log('kill',this.props.alias);
+
+		this.ev.kill();
 	};
 
 	this.run=() =>
 	{
-		console.log('run',this.props.alias);
+		if(debug) console.log('run',this.props.alias);
+
+		this.props.execution.start=(+new Date()/1000).toFixed(0);
+
+		this.ev.run();
 	};
 
 	this.toData=() => this.props_filter(this.props);
@@ -82,10 +91,13 @@ exports.tasklist=TaskList=function()
 
 	this.ev=
 	{
-		start: (task) => {},
-		stdout: (data,task) => {},
-		stderr: (data,task) => {},
-		exit: (err_code,task) => {},
+		// start: (task) => {},
+		// stdout: (data,task) => {},
+		// stderr: (data,task) => {},
+		// exit: (err_code,task) => {},
+
+		kill: (task) => {},
+		run: (task) => {},
 
 		update_prop: (prop,value,task) => {}
 	};
@@ -103,6 +115,20 @@ exports.tasklist=TaskList=function()
 	{
 		if(task instanceof Task)
 		{
+			var temp_kill=task.ev.kill;
+			task.ev.kill=() =>
+			{
+				temp_kill();
+				this.ev.kill(task);
+			};
+
+			var temp_run=task.ev.run;
+			task.ev.run=() =>
+			{
+				temp_run();
+				this.ev.run(task);
+			};
+
 			var temp_update_prop=task.ev.update_prop;
 			task.ev.update_prop=(prop,value) =>
 			{
@@ -176,9 +202,15 @@ exports.tasklist=TaskList=function()
 
 	this.killall=function()
 	{
-		console.log('killall');
-		// if(this.autoremove)	while(tasks.length>0) tasks.pop().kill();
-		// else tasks.forEach((task) => task.kill());
+		if(debug) console.log('killall');
+
+		if(this.autoremove)	while(tasks.length>0) tasks.pop().kill();
+		else tasks.forEach((task) => task.kill());
+	};
+
+	this.dispatchMessages=function(arr_msgs)
+	{
+
 	};
 
 	this.toData=() => tasks.map(e => e.toData());
