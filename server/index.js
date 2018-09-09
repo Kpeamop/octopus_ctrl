@@ -1,3 +1,5 @@
+debug=true;
+
 const net=require('net');
 const { client,clientlist }=require('./client');
 const { task,tasklist }=require('./task');
@@ -13,12 +15,37 @@ module.exports=Server=function()
 	this.tasks=new tasklist();
 	this.clients=new clientlist();
 
-	this.ev=
+	this.tasks.ev=
 	{
-		data: () => {},
-		connect: (client) => { console.log('c'/*,client*/); },
-		disconnect: (client) => { console.log('d'/*,client*/); },
-		error: () => {},
+		kill: (task) => {  },
+
+		run: (task) =>
+		{
+			var client;
+
+			if(client=this.clients.lazyClient(80,task.props.priority))
+			{
+				task.props.client=client.props.alias;
+
+				client.socket.send({ action:'run', props:task.props });
+			}
+			else console.log('Can\'t start "'+task.props.alias+'". Not found any client.');
+		},
+
+		update_prop: (prop,value,task) => {}
+
+	};
+
+	this.clients.ev=
+	{
+		connect:	(client)		=> { if(debug) console.log('connect from',client.socket.remoteAddress); },
+		disconnect:	(client)		=> { if(debug) console.log('disconnect from',client.socket.remoteAddress); },
+		error:		(error,client)	=> { if(debug) console.log('clients error',error,client); },
+
+		start:	(task,client)			=> { if(debug) console.log('start',task,' from ',client.props.alias); },
+		stdout:	(text,task,client)		=> { if(debug) console.log('stdout',task,' from ',client.props.alias); },
+		stderr:	(text,task,client)		=> { if(debug) console.log('stderr',task,' from ',client.props.alias); },
+		exit:	(err_code,task,client)	=> { if(debug) console.log('exit code=',err_code,task,' from ',client.props.alias); }
 	};
 
 	this.set=function(k,v)
@@ -33,8 +60,6 @@ module.exports=Server=function()
 		this.server=net.createServer()
 		.on('connection',sock =>
 		{
-			console.log('connect from',sock.server._connectionKey);
-
 			var c=new client(sock);
 
 			var i;
@@ -49,8 +74,6 @@ module.exports=Server=function()
 			else this.clients.addObject(c);
 
 			c.ev.connect();
-
-			this.ev.connect(c);
 		})
 		.listen({
 					port: this.config.connection.port,
