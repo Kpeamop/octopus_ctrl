@@ -1,4 +1,4 @@
-debug=false;
+debug=true;
 
 const dns=require('dns');
 
@@ -19,6 +19,7 @@ exports.client=Client=function(sock,props)
 					ip: sock.remoteAddress,
 					hostname: '',
 					loadavg: [0,0,0],
+					cpus: 1,
 					tasks: [] // todo: aliases of tasks
 				},
 			r={};
@@ -39,21 +40,19 @@ exports.client=Client=function(sock,props)
 
 	this.ev=
 	{
-		connect: () => {},
-		disconnect: () => {},
-		error: () => {},
+		connect:	()		=> {},
+		disconnect: ()		=> {},
+		error:		(error)	=> {},
 
-		start: () => {},
-		stdout: (data) => {},
-		stderr: (data) => {},
-		exit: () => {}
+		start:	(task) 			=> {},
+		stdout:	(text,task)		=> {},
+		stderr:	(text,task)		=> {},
+		exit:	(err_code,task)	=> {}
 	};
 
 	this.socket.on('data',(data) =>
 	{
-		var adata=data.toString().split(String.fromCharCode(10));
-
-		adata.forEach((e,i) =>
+		data.toString().split(String.fromCharCode(10)).forEach((e,i) =>
 		{
 			if(!e) return;
 
@@ -65,21 +64,58 @@ exports.client=Client=function(sock,props)
 			}
 			catch(e)
 			{
-				console.error('data parse error',data.toString(),debug ? e : '');
+				return console.error('data parse error',data.toString(),debug ? e : '');
 			}
 
-			if(jdata!==undefined)
+			var action=jdata.action,
+				task=jdata.alias || '',
+				text=jdata.text || '',
+				err_code=jdata.err_code || '';
+
+			switch(action)
 			{
-				console.log(jdata);
+				case 'start':
+					this.ev.start(task);
+				break;
+
+				case 'stdout':
+					this.ev.stdout(task,text);
+				break;
+
+				case 'stderr':
+					this.ev.stderr(task,text);
+				break;
+
+				case 'exit':
+					this.ev.exit(task,err_code);
+				break;
+
+				case 'loadavg':
+					this.props.loadavg=jdata.value;
+				break;
+
+				case 'status':
+					this.props.loadavg=jdata.loadavg;
+					this.props.cpus=jdata.cpus;
+
+					// todo: tasks
+				break;
+
+				default: console.log('Inknown action:',action,task,debug ? jdata : '');
 			}
 		});
 	})
 	.on('error',e => this.ev.error(e))
-	.on('close',e =>
+	.on('close',() =>
 	{
 		this.props.active=false;
 		this.ev.disconnect();
 	});
+
+	this.socket.send=function(data)
+	{
+		this.write((typeof data=='object' ? JSON.stringify(data) : data)+String.fromCharCode(10));
+	};
 
 	this.toData=() => this.props_filter(this.props);
 };
@@ -87,6 +123,70 @@ exports.client=Client=function(sock,props)
 exports.clientlist=ClientList=function()
 {
 	var clients=[];
+
+	this.ev=
+	{
+		connect:	(client)		=> {},
+		disconnect: (client)		=> {},
+		error:		(error,client)	=> {},
+
+		start:	(task,client)			=> {},
+		stdout:	(text,task,client)		=> {},
+		stderr:	(text,task,client)		=> {},
+		exit:	(err_code,task,client)	=> {}
+	};
+
+	var addClientEvents=(client) =>
+	{
+		var temp_connect=client.ev.connect;
+		client.ev.connect=() =>
+		{
+			temp_connect();
+			this.ev.connect(client);
+		};
+
+		var temp_disconnect=client.ev.disconnect;
+		client.ev.disconnect=() =>
+		{
+			temp_disconnect();
+			this.ev.disconnect(client);
+		};
+
+		var temp_error=client.ev.error;
+		client.ev.error=(error) =>
+		{
+			temp_error(error);
+			this.ev.error(error,client);
+		};
+
+		var temp_start=client.ev.start;
+		client.ev.start=(task) =>
+		{
+			temp_start(task);
+			this.ev.start(task,client);
+		};
+
+		var temp_stdout=client.ev.stdout;
+		client.ev.stdout=(text,task) =>
+		{
+			temp_stdout(text,task);
+			this.ev.stdout(text,task,client);
+		};
+
+		var temp_stderr=client.ev.stderr;
+		client.ev.stderr=(text,task) =>
+		{
+			temp_stderr(text,task);
+			this.ev.stderr(text,task,client);
+		};
+
+		var temp_exit=client.ev.exit;
+		client.ev.exit=(err_code,task) =>
+		{
+			temp_exit(err_code,task);
+			this.ev.exit(err_code,task,client);
+		};
+	};
 
 	this.add=function(sock,props)
 	{
@@ -101,6 +201,8 @@ exports.clientlist=ClientList=function()
 	{
 		if(client instanceof Client)
 		{
+			addClientEvents(client);
+
 			clients.push(client);
 
 			return true;
@@ -142,6 +244,8 @@ exports.clientlist=ClientList=function()
 	{
 		if(client instanceof Client && typeof index=='number' && index<clients.length && index>=0)
 		{
+			addClientEvents(client);
+
 			clients.splice(index,1,client);
 
 			return true;
@@ -168,6 +272,29 @@ exports.clientlist=ClientList=function()
 		});
 
 		return r;
+	};
+
+	this.lazyClient=function(skip_overload=80,priority='')
+	{
+		var active=clients.filter(e => e.props.enabled && e.props.active).sort((a,b) => a<b),
+			lazy=active.filter(e => e.props.loadavg[1]/e.props.cpus<=skip_overload/100);
+
+		if(lazy.length==0) lazy=active;
+
+		var client=lazy[0];
+
+		lazy.some(e =>
+		{
+			if(e instanceof Client && e.props.alias==priority)
+			{
+				client=e;
+				return true;
+			}
+
+			return false;
+		});
+
+		return client;
 	};
 
 	this.toData=() => clients.map(e => e.toData());
