@@ -25,7 +25,7 @@ exports.task=Task=function(alias,cmd,args=[])
 	{
 		start: (cmd,args) =>
 		{
-			private.starttime=(+new Date()/1000).toFixed(0);
+			private.starttime=parseInt((+new Date()/1000).toFixed(0));
 			private.endtime=0;
 
 			if(debug) console.log('start:',cmd,args);
@@ -35,7 +35,7 @@ exports.task=Task=function(alias,cmd,args=[])
 		// close: (err_code) => {},
 		exit: (err_code) =>
 		{
-			private.endtime=(+new Date()/1000).toFixed(0);
+			private.endtime=parseInt((+new Date()/1000).toFixed(0));
 
 			if(debug) console.log('exit:',err_code);
 		},
@@ -198,6 +198,7 @@ exports.tasklist=TaskList=function()
 			if(e instanceof Task && e.alias==alias)
 			{
 				r=i;
+
 				return true;
 			}
 

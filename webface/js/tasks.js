@@ -124,9 +124,9 @@ function Task(parent_item)
 		var start=parseInt(v.start);
 		var pid=this.data('pid');
 
-		this.value('starttime',	pid>0 ? timeFormat(start,'d.m.y h:i:s') : '---');
-		this.value('runtime',	pid>0 ? totime((+new Date()/1000).toFixed(0)-start) : '---');
-		this.value('endtime',	pid>0 ? timeFormat(end,'d.m.y h:i:s') : '---');
+		this.value('starttime',	start>0 ? timeFormat(start,'d.m.y h:i:s') : '---');
+		this.value('runtime',	start>0 ? totime((end>0 ? end : (+new Date()/1000).toFixed(0))-start) : '---');
+		this.value('endtime',	end>0 ? timeFormat(end,'d.m.y h:i:s') : '---');
 
 		this.value('restart',	pid>0 ? 'restart' : 'start');
 		this.element('kill').disabled=!pid;
