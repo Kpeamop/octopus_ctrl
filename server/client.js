@@ -12,7 +12,7 @@ exports.client=Client=function(sock,props)
 	{
 		var mask=
 				{
-					starttime: (+new Date()/1000).toFixed(0),
+					starttime: parseInt((+new Date()/1000).toFixed(0)),
 					alias: sock.remoteAddress,
 					enabled: true,
 					active: true,
@@ -44,10 +44,10 @@ exports.client=Client=function(sock,props)
 		disconnect: ()		=> {},
 		error:		(error)	=> {},
 
-		start:	(task) 			=> {},
-		stdout:	(text,task)		=> {},
-		stderr:	(text,task)		=> {},
-		exit:	(err_code,task)	=> {}
+		start:	(starttime,pid,task)	=> {},
+		stdout:	(text,task)				=> {},
+		stderr:	(text,task)				=> {},
+		exit:	(endtime,err_code,task)	=> {}
 	};
 
 	this.socket.on('data',(data) =>
@@ -75,19 +75,19 @@ exports.client=Client=function(sock,props)
 			switch(action)
 			{
 				case 'start':
-					this.ev.start(task);
+					this.ev.start(jdata.starttime,jdata.pid,task);
 				break;
 
 				case 'stdout':
-					this.ev.stdout(task,text);
+					this.ev.stdout(text,task);
 				break;
 
 				case 'stderr':
-					this.ev.stderr(task,text);
+					this.ev.stderr(text,task);
 				break;
 
 				case 'exit':
-					this.ev.exit(task,err_code);
+					this.ev.exit(jdata.endtime,err_code,task);
 				break;
 
 				case 'loadavg':
@@ -130,10 +130,10 @@ exports.clientlist=ClientList=function()
 		disconnect: (client)		=> {},
 		error:		(error,client)	=> {},
 
-		start:	(task,client)			=> {},
-		stdout:	(text,task,client)		=> {},
-		stderr:	(text,task,client)		=> {},
-		exit:	(err_code,task,client)	=> {}
+		start:	(starttime,pid,task,client)		=> {},
+		stdout:	(text,task,client)				=> {},
+		stderr:	(text,task,client)				=> {},
+		exit:	(endtime,err_code,task,client)	=> {}
 	};
 
 	var addClientEvents=(client) =>
@@ -160,10 +160,10 @@ exports.clientlist=ClientList=function()
 		};
 
 		var temp_start=client.ev.start;
-		client.ev.start=(task) =>
+		client.ev.start=(starttime,pid,task) =>
 		{
-			temp_start(task);
-			this.ev.start(task,client);
+			temp_start(starttime,pid,task);
+			this.ev.start(starttime,pid,task,client);
 		};
 
 		var temp_stdout=client.ev.stdout;
@@ -181,10 +181,10 @@ exports.clientlist=ClientList=function()
 		};
 
 		var temp_exit=client.ev.exit;
-		client.ev.exit=(err_code,task) =>
+		client.ev.exit=(endtime,err_code,task) =>
 		{
-			temp_exit(err_code,task);
-			this.ev.exit(err_code,task,client);
+			temp_exit(endtime,err_code,task);
+			this.ev.exit(endtime,err_code,task,client);
 		};
 	};
 
@@ -273,6 +273,15 @@ exports.clientlist=ClientList=function()
 
 		return r;
 	};
+
+	this.itemOfAlias=function(alias)
+	{
+		var i=this.indexOfAlias(alias);
+
+		if(i>=0) return this.items(i);
+		else return null;
+	};
+
 
 	this.lazyClient=function(skip_overload=80,priority='')
 	{

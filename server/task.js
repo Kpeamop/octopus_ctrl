@@ -2,9 +2,12 @@ debug=true;
 
 const fs=require('fs');
 const path=require('path');
+const log=require('./log');
 
 exports.task=Task=function(props)
 {
+	this.log=new log(1000);
+
 	this.props_filter=(a) =>
 	{
 		var mask=
@@ -12,7 +15,6 @@ exports.task=Task=function(props)
 					alias: '',
 					description: '',
 					enabled: false,
-					active: true,
 					env: {},
 					pid: 0,
 					ram: 0,
@@ -29,7 +31,8 @@ exports.task=Task=function(props)
 					},
 					execution: {
 						start: 0,
-						end: 0
+						end: 0,
+						err_code: 0
 					},
 					cmd: '',
 					args: [],
@@ -49,11 +52,33 @@ exports.task=Task=function(props)
 
 	this.ev=
 	{
-	// 	start: () => {},
-	// 	stdout: (data) => {},
-	// 	stderr: (data) => {},
-	// 	// close: (err_code) => {},
-	// 	exit: (err_code) => {},
+		start: (starttime,pid,client) =>
+		{
+			this.props.execution.err_code=0;
+			this.props.execution.start=starttime;
+			this.props.execution.end=0;
+			this.props.client=client;
+			this.props.pid=pid;
+
+			this.log.addSystem('started',client);
+		},
+		stdout: (msg,client) =>
+		{
+			this.log.addStdout(msg,client);
+		},
+		stderr: (msg,client) =>
+		{
+			this.log.addStderr(msg,client);
+		},
+		// close: (err_code) => {},
+		exit: (endtime,err_code,client) =>
+		{
+			this.props.pid=0;
+			this.props.execution.end=endtime;
+			this.props.execution.err_code=err_code;
+
+			this.log.addSystem('stopped at err:'+err_code,client);
+		},
 
 		kill: () => {},
 		run: () => {},
@@ -72,7 +97,7 @@ exports.task=Task=function(props)
 	{
 		if(debug) console.log('run',this.props.alias);
 
-		this.props.execution.start=(+new Date()/1000).toFixed(0);
+		this.props.execution.start=parseInt((+new Date()/1000).toFixed(0));
 
 		this.ev.run();
 	};
@@ -210,7 +235,35 @@ exports.tasklist=TaskList=function()
 
 	this.dispatchMessages=function(arr_msgs)
 	{
+		arr_msgs.forEach(m =>
+		{
+			if(!m.task) return console.log('Not found alias task in "'+m.action+'".');
 
+			var task=this.itemOfAlias(m.task);
+
+			if(!task) return console.log('Not found task as "'+m.task+'" in "'+m.action+'".');
+
+			switch(m.action)
+			{
+				case 'start':
+					task.ev.start(m.starttime,m.pid,m.client.props.alias);
+				break;
+
+				case 'stdout':
+					task.ev.stdout(m.text,m.client.props.alias);
+				break;
+
+				case 'stderr':
+					task.ev.stderr(m.text,m.client.props.alias);
+				break;
+
+				case 'exit':
+					task.ev.exit(m.endtime,m.err_code,m.client.props.alias);
+				break;
+
+				default: console.log('Inknown message action');
+			}
+		});
 	};
 
 	this.toData=() => tasks.map(e => e.toData());

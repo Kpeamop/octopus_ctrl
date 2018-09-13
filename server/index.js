@@ -17,7 +17,15 @@ module.exports=Server=function()
 
 	this.tasks.ev=
 	{
-		kill: (task) => {  },
+		kill: (task) =>
+		{
+			var client=this.clients.itemOfAlias(task.props.client);
+
+			if(!task.props.execution.end)
+			{
+				client.socket.send({ action:'kill', task:task.props.alias });
+			}
+		},
 
 		run: (task) =>
 		{
@@ -25,9 +33,9 @@ module.exports=Server=function()
 
 			if(client=this.clients.lazyClient(80,task.props.priority))
 			{
-				task.props.client=client.props.alias;
+				// task.props.client=client.props.alias;
 
-				client.socket.send({ action:'run', props:task.props });
+				client.socket.send({ action:'run', task:task.props.alias,props:task.props });
 			}
 			else console.log('Can\'t start "'+task.props.alias+'". Not found any client.');
 		},
@@ -42,10 +50,30 @@ module.exports=Server=function()
 		disconnect:	(client)		=> { if(debug) console.log('disconnect from',client.socket.remoteAddress); },
 		error:		(error,client)	=> { if(debug) console.log('clients error',error,client); },
 
-		start:	(task,client)			=> { if(debug) console.log('start',task,' from ',client.props.alias); },
-		stdout:	(text,task,client)		=> { if(debug) console.log('stdout',task,' from ',client.props.alias); },
-		stderr:	(text,task,client)		=> { if(debug) console.log('stderr',task,' from ',client.props.alias); },
-		exit:	(err_code,task,client)	=> { if(debug) console.log('exit code=',err_code,task,' from ',client.props.alias); }
+		start:	(starttime,pid,task,client) =>
+		{
+			if(debug) console.log('start',task,' from ',client.props.alias);
+
+			this.tasks.dispatchMessages([{ action:'start', task, client, starttime, pid }]);
+		},
+		stdout:	(text,task,client) =>
+		{
+			if(debug) console.log('stdout from',client.props.alias,'/',task,':',text);
+
+			this.tasks.dispatchMessages([{ action:'stdout', task, client, text }]);
+		},
+		stderr:	(text,task,client) =>
+		{
+			if(debug) console.log('stderr from',client.props.alias,'/',task,':',text);
+
+			this.tasks.dispatchMessages([{ action:'stderr', task, client, text }]);
+		},
+		exit:	(endtime,err_code,task,client) =>
+		{
+			if(debug) console.log('exit code:',err_code,task,' from ',client.props.alias);
+
+			this.tasks.dispatchMessages([{ action:'exit', task, client, endtime, err_code }]);
+		}
 	};
 
 	this.set=function(k,v)
