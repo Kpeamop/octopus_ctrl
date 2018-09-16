@@ -177,7 +177,10 @@ function Control(parent_item,parent_dom)
 
 		if(typeof event=='string') event=[event];
 
-		event.forEach((e) => elements[elementid].addEventListener(e,func,false));
+		elementid.forEach(el =>
+		{
+			event.forEach((ev) => elements[el].addEventListener(ev,func,false));
+		});
 
 		return this;
 	};
