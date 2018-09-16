@@ -87,13 +87,18 @@ function Task(parent_item)
 		this.ev.update('starttime',this.data('starttime',time.datas()),() => this.lockup=false);
 	};
 
-	this.bind('alias',		v => this.value('alias',v));
-	this.bind('description',v => this.value('description',v));
-	this.bind('pid',		v => this.value('pid',v));
-	this.bind('ram',		v => this.value('ram',(v/1024/1024).toFixed(1)));
-	this.bind('enabled',	v => this.value('enabled',v));
-	this.bind('client',		v => this.value('client',v));
-	this.bind('starttime',	v =>
+	this.bind('alias',		 v => this.value('alias',v));
+	this.bind('description', v => this.value('description',v));
+	this.bind('pid',		 v => this.value('pid',v));
+	this.bind('ram',		 v => this.value('ram',(v/1024/1024).toFixed(1)));
+	this.bind('enabled',	 v => this.value('enabled',v));
+	this.bind('client',		 v => this.value('client',v));
+	this.bind('log_counters',v =>
+	{
+			this.value('log-stdout',v.stdout);
+			this.value('log-stderr',v.stderr);
+	})
+	this.bind('starttime',	 v =>
 	{
 		if(!time.lockup) time.loadData(v);
 

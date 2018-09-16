@@ -1,6 +1,7 @@
 debug=true;
 
 const fs=require('fs');
+
 const path=require('path');
 const log=require('./log');
 
@@ -8,7 +9,7 @@ exports.task=Task=function(props)
 {
 	this.log=new log(1000);
 
-	this.props_filter=(a) =>
+	this.props_filter=(a,replace) =>
 	{
 		var mask=
 				{
@@ -44,6 +45,10 @@ exports.task=Task=function(props)
 		for(var i in mask)
 			if(a[i]===undefined) r[i]=mask[i];
 			else r[i]=a[i];
+
+		if(replace!==undefined)
+			for(var i in replace)
+				r[i]=replace[i];
 
 		return r;
 	};
@@ -102,7 +107,7 @@ exports.task=Task=function(props)
 		this.ev.run();
 	};
 
-	this.toData=() => this.props_filter(this.props);
+	this.toData=() => this.props_filter(this.props,{ log_counters: this.log.counters() });
 };
 
 exports.tasklist=TaskList=function()

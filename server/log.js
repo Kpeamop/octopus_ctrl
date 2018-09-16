@@ -2,13 +2,24 @@ module.exports=function(size)
 {
 	var buffer=[];
 	var index=0;
+	var counters=
+	{
+		stdout: 0,
+		stderr: 0,
+		system: 0
+	};
 
 	Object.defineProperty(this,'lastIndex', { get: () => index });
+	// Object.defineProperty(this,'counters', { get: () => counters });
 
 	this.count=() => buffer.length;
 
-	this.addStdout=function(mgs,client)
+	this.counters=() => counters;
+
+	this.addStdout=function(msg,client)
 	{
+		counters.stdout++;
+
 		if(buffer.length>=size) buffer.shift();
 
 		buffer.push({ i:++index, tstamp_ms:+new Date(), type:'stdout', msg, client });
@@ -16,6 +27,8 @@ module.exports=function(size)
 
 	this.addStderr=function(msg,client)
 	{
+		counters.stderr++;
+
 		if(buffer.length>=size) buffer.shift();
 
 		buffer.push({ i:++index, tstamp_ms:+new Date(), type:'stderr', msg, client });
@@ -23,6 +36,8 @@ module.exports=function(size)
 
 	this.addSystem=function(msg,client)
 	{
+		counters.system++;
+
 		if(buffer.length>=size) buffer.shift();
 
 		buffer.push({ i:++index, tstamp_ms:+new Date(), type:'system', msg, client });
@@ -35,7 +50,7 @@ module.exports=function(size)
 
 	this.getDesc=(index,count) =>
 	{
-		return buffer.reverse().slice(index,index+count)
+		return buffer.reverse().slice(index,index+count);
 	};
 
 };
