@@ -1,0 +1,30 @@
+mixin log_item
+	.item
+		.l-index.index 14443
+		.l-time.time 18-08-25 10:30:33.123
+		.l-client.client testclient1
+		span.l-message.message message
+
+doctype html
+html
+	head
+		link(href="/css/log.css" rel="stylesheet")
+		meta(charset="utf-8")
+		script(src="/js/jquery.js")
+		script(src="/js/functions.js")
+		script(src="/js/controls.js")
+		script(src="/js/log.js")
+		title Octopus Control
+	body#body
+		.head Логи&nbsp;
+			span.task #{task}
+			| &nbsp;(stdout:
+			span.stdout #{log_counters.stdout}
+			| , stderr:
+			span.stderr #{log_counters.stderr}
+			| )
+
+		script(id="Logs" type="html/template")
+			.logs
+		script(id="Log" type="html/template")
+			+log_item

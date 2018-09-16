@@ -43,14 +43,18 @@ module.exports=function(size)
 		buffer.push({ i:++index, tstamp_ms:+new Date(), type:'system', msg, client });
 	};
 
-	this.getAsk=(index,count) =>
+	this.getAsk=(idx,count) =>
 	{
-		return buffer.slice(index,index+count);
+		count=count || 20;
+		idx=idx || index-count;
+		idx=idx>0 ? idx : 1;
+
+		return buffer.filter(e => e.i>=idx && e.i<=idx+count-1);
 	};
 
-	this.getDesc=(index,count) =>
-	{
-		return buffer.reverse().slice(index,index+count);
-	};
+	// this.getDesc=(idx,count) =>
+	// {
+	// 	return buffer.reverse().slice(idx,idx+count);
+	// };
 
 };

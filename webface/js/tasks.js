@@ -157,6 +157,8 @@ function Task(parent_item)
 	this.bindev('kill','click',		() => this.ev.kill());
 	this.bindev('restart','click',	() => this.ev.restart());
 
+	this.bindev(['logout','logerr'],'click',e => { e.preventDefault(); window.open('/log.html?task='+encodeURIComponent(this.data('alias'))); });
+
 	// animated self destruct
 
 	var destruct_timeout;

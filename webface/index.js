@@ -43,7 +43,7 @@ module.exports=function()
 
 	server.get(/^\/(.+\.html)?$/,function(req,res)
 	{
-		var m=req.url.match(/^\/([-_a-zA-Z0-9]*)\.html$/),
+		var m=req.url.match(/^\/([-_a-zA-Z0-9]*)\.html/),
 			file=m instanceof Array && m[1]!==undefined ? m[1] : 'index',
 			vars={};
 
@@ -56,6 +56,17 @@ module.exports=function()
 			case 'test':
 
 			break;
+
+			case 'log':
+				var task,alias=req.query.task;
+
+				if(alias && (task=private.tasks.itemOfAlias(alias)))
+				{
+					vars.task=alias;
+					vars.log_counters=task.log.counters();
+
+					break;
+				}
 
 			default:
 				res.status(404);
@@ -71,7 +82,7 @@ module.exports=function()
 
 	server.get(/^\/json\/(.+)$/,function(req,res)
 	{
-		var m=req.url.match(/^\/json\/([-_a-zA-Z0-9]*)(?:\/([-_a-zA-Z0-9]+))?$/),
+		var m=req.url.match(/^\/json\/([-_a-zA-Z0-9]*)(?:\/([-_a-zA-Z0-9]+))?/),
 			action=m instanceof Array && m[1]!==undefined ? m[1] : 'index';
 
 		var data;
@@ -95,8 +106,12 @@ module.exports=function()
 			break;
 
 			case 'log':
-				if(m[2]!==undefined)
+				var task,alias=req.query.task;
+
+				if(alias && (task=private.tasks.itemOfAlias(alias)))
 				{
+					if(m[2]===undefined) data=task.log.getAsk(req.query.index,req.query.count || 10);
+					else data=task.log.getDesc(req.query.index,req.query.count || 10);
 
 					break;
 				}

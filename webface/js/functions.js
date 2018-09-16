@@ -11,15 +11,15 @@ function totime(ts)
 			(second<10 ? '0'+second : second);
 };
 
-function timeFormat(ts,format)
+function timeFormat(ts,format,ms)
 {
 	format=format || 'y-m-d h:i:s';
 
-	var d=new Date(ts*1000);
+	var d=new Date(ms ? ts : ts*1000);
 
 	var dt=s => (i => { s=='Month' && i++; return i<10 ? '0'+i : i; })(d['get'+s]());
 
-	return format.replace(/[ymdhis]/g,i => dt({y:'FullYear',m:'Month',d:'Date',h:'Hours',i:'Minutes',s:'Seconds'}[i]) );
+	return format.replace(/[ymdhisx]/g,i => dt({y:'FullYear',m:'Month',d:'Date',h:'Hours',i:'Minutes',s:'Seconds',x:'Milliseconds'}[i]) );
 }
 
 function jsonRequest(url,data,async_cb)
