@@ -55,7 +55,7 @@ module.exports=Client=function()
 				}
 
 				var action=jdata.action,
-					task=jdata.alias || '',
+					task=jdata.task || '',
 					text=jdata.text || '',
 					err_code=jdata.err_code || '';
 
@@ -68,7 +68,7 @@ module.exports=Client=function()
 					case 'kill':
 						var i;
 
-						if(i=private.tasks.itemOfAlias(jdata.alias)) i.kill();
+						if(i=private.tasks.itemOfAlias(task)) i.kill();
 					break;
 
 					case 'killall':
@@ -119,7 +119,7 @@ module.exports=Client=function()
 
 			clearTimeout(private.tm_autokill);
 
-			private.tm_loadavg=setInterval(() => private.client.send({ action: 'loadavg', value:os.loadavg() }),5000);
+			private.tm_loadavg=setInterval(() => private.client.send({ action: 'loadavg', value:os.loadavg(), tasks:private.tasks.count() }),3000);
 
 			private.client.send({ action:'status', tasks:private.tasks.toData(), loadavg: os.loadavg(), cpus: os.cpus().length });
 		});

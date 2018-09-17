@@ -82,7 +82,7 @@ function Client(parent_item)
 	this.bind('ip',			v => this.value('ip',v) );
 	this.bind('loadavg',	v => this.value('loadavg',v.map(i=>i.toFixed(2)).join(', ')) );
 	this.bind('starttime',	v => this.value('uptime',totime((+new Date()/1000).toFixed(0)-v).replace(' ',' day(s) ')) );
-	this.bind('tasks',		v => this.value('tasks',v.length) );
+	this.bind('tasks',		v => this.value('tasks',v) );
 
 	this.bindev('enabled','change',e =>
 	{

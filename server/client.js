@@ -20,7 +20,7 @@ exports.client=Client=function(sock,props)
 					hostname: '',
 					loadavg: [0,0,0],
 					cpus: 1,
-					tasks: [] // todo: aliases of tasks
+					tasks: 0 // todo: aliases of tasks
 				},
 			r={};
 
@@ -92,6 +92,7 @@ exports.client=Client=function(sock,props)
 
 				case 'loadavg':
 					this.props.loadavg=jdata.value;
+					this.props.tasks=jdata.tasks;
 				break;
 
 				case 'status':
