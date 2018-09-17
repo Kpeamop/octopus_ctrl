@@ -1,3 +1,5 @@
+debug=true;
+
 const net=require('net');
 const { task,tasklist }=require('./task');
 const inc=require('../include');
@@ -89,7 +91,7 @@ module.exports=Client=function()
 		})
 		.on('error',(err) =>
 		{
-			console.log('error',err);
+			if(debug) console.log('error',err);
 		})
 		.on('close',function()
 		{
@@ -97,8 +99,12 @@ module.exports=Client=function()
 
 			clearInterval(private.tm_loadavg);
 
-			if(private.config.autokill>0)
-				private.config.autokill=setTimeout(() => private.tasks.killall(),private.config.autokill);
+			if(private.config.autokill>0 && !private.tm_autokill)
+				private.tm_autokill=setTimeout(() =>
+				{
+					private.tasks.killall();
+					private.tm_autokill=null;
+				},private.config.autokill);
 
 			setTimeout(() => this.rconnect(),500);
 		})
@@ -108,8 +114,11 @@ module.exports=Client=function()
 
 			clearInterval(private.tm_loadavg);
 
-			if(private.config.autokill>0)
-				private.config.autokill=setTimeout(() => private.tasks.killall(),private.config.autokill);
+			if(private.config.autokill>0 && !private.tm_autokill)
+				private.tm_autokill=setTimeout(() => {
+					private.tasks.killall();
+					private.tm_autokill=null;
+				},private.config.autokill);
 
 			setTimeout(() => this.rconnect(),500);
 		})
@@ -118,6 +127,7 @@ module.exports=Client=function()
 			console.log('connected');
 
 			clearTimeout(private.tm_autokill);
+			private.tm_autokill=null;
 
 			private.tm_loadavg=setInterval(() => private.client.send({ action: 'loadavg', value:os.loadavg(), tasks:private.tasks.count() }),3000);
 
