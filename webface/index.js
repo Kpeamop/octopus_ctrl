@@ -150,6 +150,7 @@ module.exports=function()
 				if((i=private.tasks.indexOfAlias(req.body.alias))>=0)
 				{
 					private.tasks.items(i).props[req.body.property]=req.body.value;
+					private.tasks.save();
 
 					data.result=true;
 				}

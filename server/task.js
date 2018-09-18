@@ -9,51 +9,71 @@ exports.task=Task=function(props)
 {
 	this.log=new log(1000);
 
-	this.props_filter=(a,replace) =>
+	var mask_def=	{
+						alias: '',
+						description: '',
+						enabled: false,
+						env: {},
+						pid: 0,
+						ram: 0,
+						client: '',
+						starttime: {
+							type: 'manual',
+							ht: '',
+							mt: '',
+							dt: '',
+							hi: '',
+							mi: '',
+							si: '',
+							ttl: 7200
+						},
+						execution: {
+							start: 0,
+							end: 0,
+							err_code: 0
+						},
+						cmd: '',
+						args: [],
+						multiple: false,
+						priority: ''
+					},
+		mask_save=	{
+						alias: '',
+						description: '',
+						enabled: false,
+						env: {},
+						starttime: {
+							type: 'manual',
+							ht: '',
+							mt: '',
+							dt: '',
+							hi: '',
+							mi: '',
+							si: '',
+							ttl: 7200
+						},
+						cmd: '',
+						args: [],
+						multiple: false,
+						priority: ''
+					};
+
+	this.props_filter=(mask,a,replace) =>
 	{
-		var mask=
-				{
-					alias: '',
-					description: '',
-					enabled: false,
-					env: {},
-					pid: 0,
-					ram: 0,
-					client: '',
-					starttime: {
-						type: 'manual',
-						ht: '',
-						mt: '',
-						dt: '',
-						hi: '',
-						mi: '',
-						si: '',
-						ttl: 7200
-					},
-					execution: {
-						start: 0,
-						end: 0,
-						err_code: 0
-					},
-					cmd: '',
-					args: [],
-					multiple: false,
-					priority: ''
-				},
-			r={};
+		var r={};
 
 		for(var i in mask)
 			if(a[i]===undefined) r[i]=mask[i];
 			else r[i]=a[i];
 
-		if(replace!==undefined)
+		if(typeof replace=='object')
 			for(var i in replace)
 				r[i]=replace[i];
 
 		return r;
 	};
 
-	this.props=this.props_filter(props);
+	this.props=this.props_filter(mask_def,props);
 
 	this.ev=
 	{
@@ -107,17 +127,22 @@ exports.task=Task=function(props)
 		this.ev.run();
 	};
 
-	this.toData=() => this.props_filter(this.props,{ log_counters: this.log.counters() });
+	this.toData=() => this.props_filter(mask_def,this.props,{ log_counters: this.log.counters() });
+	this.saveData=() => this.props_filter(mask_save,this.props);
 };
 
 exports.tasklist=TaskList=function()
 {
 	var dbf=path.dirname(__dirname)+'/db.json',
+		tasks=[];
+
+	try
+	{
+		fs.accessSync(dbf);
+
 		tasks=JSON.parse(fs.readFileSync(dbf));
-
-	var tasks;
-
-	// fs.writeFileSync(dbf,JSON.stringify(tasks));
+	}
+	catch(e) {}
 
 	this.ev=
 	{
@@ -130,6 +155,15 @@ exports.tasklist=TaskList=function()
 		run: (task) => {},
 
 		update_prop: (prop,value,task) => {}
+	};
+
+	this.save=function()
+	{
+		try
+		{
+			fs.writeFileSync(dbf,JSON.stringify(this.saveData()));
+		}
+		catch(e) {}
 	};
 
 	this.add=function(a)
@@ -272,6 +306,7 @@ exports.tasklist=TaskList=function()
 	};
 
 	this.toData=() => tasks.map(e => e.toData());
+	this.saveData=() => tasks.map(e => e.saveData());
 
 	tasks=tasks.map(e => this.indexOfAlias(e.alias)<0 ? this.add(e) : null).filter(e => e!==null);
 };
