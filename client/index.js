@@ -77,6 +77,17 @@ module.exports=Client=function()
 						private.tasks.killall();
 					break;
 
+					case 'accept':
+						console.log('accepted');
+
+						clearTimeout(private.tm_autokill);
+						private.tm_autokill=null;
+
+						private.tm_loadavg=setInterval(() => private.client.send({ action: 'loadavg', value:os.loadavg(), tasks:private.tasks.count() }),3000);
+
+						private.client.send({ action:'status', tasks:private.tasks.toData(), loadavg: os.loadavg(), cpus: os.cpus().length });
+					break;
+
 					default: console.log('Inknown action:',action,task,debug ? jdata : '');
 				}
 			});
@@ -126,13 +137,6 @@ module.exports=Client=function()
 		.on('connect',function()
 		{
 			console.log('connected');
-
-			clearTimeout(private.tm_autokill);
-			private.tm_autokill=null;
-
-			private.tm_loadavg=setInterval(() => private.client.send({ action: 'loadavg', value:os.loadavg(), tasks:private.tasks.count() }),3000);
-
-			private.client.send({ action:'status', tasks:private.tasks.toData(), loadavg: os.loadavg(), cpus: os.cpus().length });
 		});
 
 		private.client.rconnect=function()

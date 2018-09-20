@@ -101,6 +101,8 @@ module.exports=Server=function()
 			}
 			else this.clients.addObject(c);
 
+			sock.send('{"action":"accept"}');
+
 			c.ev.connect();
 		})
 		.listen({
