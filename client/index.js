@@ -115,7 +115,8 @@ module.exports=Client=function()
 			clearInterval(private.tm_loadavg);
 
 			if(private.config.autokill>0 && !private.tm_autokill)
-				private.tm_autokill=setTimeout(() => {
+				private.tm_autokill=setTimeout(() =>
+				{
 					private.tasks.killall();
 					private.tm_autokill=null;
 				},private.config.autokill);
