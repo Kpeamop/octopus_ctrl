@@ -19,6 +19,7 @@ module.exports=function(size)
 	this.addStdout=function(msg,client)
 	{
 		counters.stdout++;
+		client=client || '';
 
 		if(buffer.length>=size) buffer.shift();
 
@@ -28,6 +29,7 @@ module.exports=function(size)
 	this.addStderr=function(msg,client)
 	{
 		counters.stderr++;
+		client=client || '';
 
 		if(buffer.length>=size) buffer.shift();
 
@@ -37,6 +39,7 @@ module.exports=function(size)
 	this.addSystem=function(msg,client)
 	{
 		counters.system++;
+		client=client || '';
 
 		if(buffer.length>=size) buffer.shift();
 
@@ -45,11 +48,11 @@ module.exports=function(size)
 
 	this.getAsk=(idx,count) =>
 	{
-		count=count || 20;
+		count=(count || 20)-1;
 		idx=idx || index-count;
 		idx=idx>0 ? idx : 1;
 
-		return buffer.filter(e => e.i>=idx && e.i<=idx+count-1);
+		return buffer.filter(e => e.i>=idx && e.i<=idx+count);
 	};
 
 	// this.getDesc=(idx,count) =>

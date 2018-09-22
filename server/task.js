@@ -115,6 +115,8 @@ exports.task=Task=function(props)
 	{
 		if(debug) console.log('kill',this.props.alias);
 
+		this.log.addSystem('kill');
+
 		this.ev.kill();
 	};
 

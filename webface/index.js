@@ -110,8 +110,8 @@ module.exports=function()
 
 				if(alias && (task=private.tasks.itemOfAlias(alias)))
 				{
-					if(m[2]===undefined) data=task.log.getAsk(req.query.index,req.query.count || 10);
-					else data=task.log.getDesc(req.query.index,req.query.count || 10);
+					if(m[2]===undefined) data=task.log.getAsk(req.query.index,req.query.count || 20);
+					// else data=task.log.getDesc(req.query.index,req.query.count || 20);
 
 					break;
 				}
