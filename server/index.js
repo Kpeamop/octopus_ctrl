@@ -7,9 +7,7 @@ const { task,tasklist }=require('./task');
 
 module.exports=Server=function()
 {
-	var $this=this;
-
-	this.config={ connection: { port: 6778 } };
+	this.config={ connection: { port: 6778 }, autokill:5000 };
 
 	// this.cron=new cron();
 	this.tasks=new tasklist();
@@ -46,9 +44,58 @@ module.exports=Server=function()
 
 	this.clients.ev=
 	{
-		connect:	(client)		=> { if(debug) console.log('connect from',client.socket.remoteAddress); },
-		disconnect:	(client)		=> { if(debug) console.log('disconnect from',client.socket.remoteAddress); },
-		error:		(error,client)	=> { if(debug) console.log('clients error',error,client); },
+		connect: (client) =>
+		{
+			if(debug) console.log('connect from',client.socket.remoteAddress);
+
+		},
+		disconnect: (client) =>
+		{
+			if(debug) console.log('disconnect from',client.socket.remoteAddress);
+
+			this.tasks.items().forEach(task =>
+			{
+				if(task.props.client==client.props.alias) task.autoreset(this.config.autokill);
+			});
+		},
+		error: 	(error,client)	=> { if(debug) console.log('clients error',error,client); },
+		status: (tasks,client)	=>
+		{
+			if(debug) console.log('client status',tasks);
+
+			this.tasks.items().forEach(task =>
+			{
+				if(task.props.client==client.props.alias)
+				{
+					task.autoreset(0);
+
+					if(!tasks.some(e => e.alias==task.props.alias))
+					{
+						task.props.execution.end=parseInt((+new Date()/1000).toFixed(0));
+						task.props.pid=0;
+					}
+				}
+			});
+
+			tasks.forEach(task =>
+			{
+				var i;
+
+				if(i=this.tasks.itemOfAlias(task.alias))
+				{
+					if(i.props.client!=client.props.alias)
+					{
+						i.autoreset(0);
+						i.kill();
+						i.props.client=client.props.alias;
+					}
+
+					i.props.execution.start=task.starttime;
+					i.props.execution.end=task.endtime;
+					i.props.pid=task.pid;
+				}
+			});
+		},
 
 		start:	(starttime,pid,task,client) =>
 		{

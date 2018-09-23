@@ -7,6 +7,11 @@ const log=require('./log');
 
 exports.task=Task=function(props)
 {
+	var private=
+	{
+		tm_autoreset: null
+	};
+
 	this.log=new log(1000);
 
 	var mask_def=	{
@@ -111,22 +116,54 @@ exports.task=Task=function(props)
 		update_prop: (prop,value) => {}
 	};
 
+	this.autoreset=timeout =>
+	{
+		if(timeout>0)
+		{
+			if(!private.tm_autoreset)
+				private.tm_autoreset=setTimeout(() =>
+				{
+					this.props.pid=0;
+					this.props.execution.end=parseInt((+new Date()/1000).toFixed(0));
+					this.props.execution.err_code=0;
+
+					this.log.addSystem('autoreset');
+					if(debug) console.log('autoreset',this.props.alias);
+
+					private.tm_autoreset=null;
+				},timeout);
+		}
+		else
+		{
+			clearTimeout(private.tm_autoreset);
+			private.tm_autoreset=null;
+		}
+
+	};
+
 	this.kill=() =>
 	{
 		if(debug) console.log('kill',this.props.alias);
 
-		this.log.addSystem('kill');
+		if(this.props.pid>0)
+		{
+			this.log.addSystem('kill');
 
-		this.ev.kill();
+			this.ev.kill();
+		}
 	};
 
 	this.run=() =>
 	{
 		if(debug) console.log('run',this.props.alias);
 
-		this.props.execution.start=parseInt((+new Date()/1000).toFixed(0));
+		if(!this.props.pid)
+		{
+			this.props.execution.start=parseInt((+new Date()/1000).toFixed(0));
+			this.props.execution.end=0;
 
-		this.ev.run();
+			this.ev.run();
+		}
 	};
 
 	this.toData=() => this.props_filter(mask_def,this.props,{ log_counters: this.log.counters() });
@@ -213,6 +250,8 @@ exports.tasklist=TaskList=function()
 	{
 		if(typeof index=='number' && index<tasks.length && index>=0) return tasks[index];
 
+		if(index===undefined) return tasks;
+
 		return false;
 	};
 
@@ -270,8 +309,7 @@ exports.tasklist=TaskList=function()
 	{
 		if(debug) console.log('killall');
 
-		if(this.autoremove)	while(tasks.length>0) tasks.pop().kill();
-		else tasks.forEach((task) => task.kill());
+		tasks.forEach(task => task.kill());
 	};
 
 	this.dispatchMessages=function(arr_msgs)

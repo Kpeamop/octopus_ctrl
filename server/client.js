@@ -4,8 +4,6 @@ const dns=require('dns');
 
 exports.client=Client=function(sock,props)
 {
-	var $this=this;
-
 	this.socket=sock;
 
 	this.props_filter=(a) =>
@@ -43,6 +41,7 @@ exports.client=Client=function(sock,props)
 		connect:	()		=> {},
 		disconnect: ()		=> {},
 		error:		(error)	=> {},
+		status:		(tasks)	=> {},
 
 		start:	(starttime,pid,task)	=> {},
 		stdout:	(text,task)				=> {},
@@ -99,7 +98,7 @@ exports.client=Client=function(sock,props)
 					this.props.loadavg=jdata.loadavg;
 					this.props.cpus=jdata.cpus;
 
-					// todo: tasks
+					this.ev.status(jdata.tasks);
 				break;
 
 				default: console.log('Inknown action:',action,task,debug ? jdata : '');
@@ -113,9 +112,10 @@ exports.client=Client=function(sock,props)
 		this.ev.disconnect();
 	});
 
-	this.socket.send=function(data)
+	this.socket.send=data =>
 	{
-		this.write((typeof data=='object' ? JSON.stringify(data) : data)+String.fromCharCode(10));
+		if(this.props.active) this.socket.write((typeof data=='object' ? JSON.stringify(data) : data)+String.fromCharCode(10));
+		else if(debug) console.log('Can\'t send. Client "'+this.props.alias+'" is not active. "'+data+'"');
 	};
 
 	this.toData=() => this.props_filter(this.props);
@@ -130,6 +130,7 @@ exports.clientlist=ClientList=function()
 		connect:	(client)		=> {},
 		disconnect: (client)		=> {},
 		error:		(error,client)	=> {},
+		status:		(task,client)	=> {},
 
 		start:	(starttime,pid,task,client)		=> {},
 		stdout:	(text,task,client)				=> {},
@@ -158,6 +159,13 @@ exports.clientlist=ClientList=function()
 		{
 			temp_error(error);
 			this.ev.error(error,client);
+		};
+
+		var temp_status=client.ev.status;
+		client.ev.status=(tasks) =>
+		{
+			temp_status(tasks);
+			this.ev.status(tasks,client);
 		};
 
 		var temp_start=client.ev.start;
@@ -214,6 +222,8 @@ exports.clientlist=ClientList=function()
 	this.items=function(index)
 	{
 		if(typeof index=='number' && index<clients.length && index>=0) return clients[index];
+
+		if(index===undefined) return clients;
 
 		return false;
 	};
