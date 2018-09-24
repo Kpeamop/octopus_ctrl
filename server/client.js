@@ -293,10 +293,9 @@ exports.clientlist=ClientList=function()
 		else return null;
 	};
 
-
 	this.lazyClient=function(skip_overload=80,priority='')
 	{
-		var active=clients.filter(e => e.props.enabled && e.props.active).sort((a,b) => a<b),
+		var active=clients.filter(e => e.props.enabled && e.props.active).sort((a,b) => a.props.loadavg[1]<b.props.loadavg[1]),
 			lazy=active.filter(e => e.props.loadavg[1]/e.props.cpus<=skip_overload/100);
 
 		if(lazy.length==0) lazy=active;
