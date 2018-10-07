@@ -3,7 +3,7 @@ debug=true;
 const fs=require('fs');
 
 const path=require('path');
-const log=require('./log');
+const { log }=require('./log');
 
 exports.task=Task=function(props)
 {
@@ -12,7 +12,7 @@ exports.task=Task=function(props)
 		tm_autoreset: null
 	};
 
-	this.log=new log(1000);
+	this.log=new log(4000);
 
 	var mask_def=	{
 						alias: '',
@@ -193,7 +193,8 @@ exports.tasklist=TaskList=function()
 		kill: (task) => {},
 		run: (task) => {},
 
-		update_prop: (prop,value,task) => {}
+		update_prop: (prop,value,task) => {},
+		log_add_msg: (type,client,ts,msg,task) => {}
 	};
 
 	this.save=function()
@@ -237,6 +238,13 @@ exports.tasklist=TaskList=function()
 			{
 				temp_update_prop(prop,value);
 				this.ev.update_prop(prop,value,task);
+			};
+
+			var temp_log_add_msg=task.log.ev.add_msg;
+			task.log.ev.add_msg=(type,client,ts,msg) =>
+			{
+				temp_log_add_msg(type,client,ts,msg);
+				this.ev.log_add_msg(type,client,ts,msg,task);
 			};
 
 			tasks.push(task);

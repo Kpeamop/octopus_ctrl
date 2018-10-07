@@ -1,8 +1,10 @@
 debug=true;
 
 const net=require('net');
+const path=require('path');
 const { client,clientlist }=require('./client');
 const { task,tasklist }=require('./task');
+const logger=require('./logger');
 // const cron=require('./cron');
 
 module.exports=Server=function()
@@ -12,6 +14,7 @@ module.exports=Server=function()
 	// this.cron=new cron();
 	this.tasks=new tasklist();
 	this.clients=new clientlist();
+	this.logger=new logger(path.dirname(__dirname)+'/logs');
 
 	this.tasks.ev=
 	{
@@ -38,8 +41,8 @@ module.exports=Server=function()
 			else console.log('Can\'t start "'+task.props.alias+'". Not found any client.');
 		},
 
-		update_prop: (prop,value,task) => {}
-
+		update_prop: (prop,value,task) => {},
+		log_add_msg: (type,client,ts,msg,task) => this.logger.add_msg(task.props.alias,msg,type)
 	};
 
 	this.clients.ev=
@@ -148,7 +151,7 @@ module.exports=Server=function()
 			}
 			else this.clients.addObject(c);
 
-			sock.send('{"action":"accept"}');
+			sock.send({ action:'accept' });
 
 			c.ev.connect();
 		})
