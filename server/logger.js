@@ -13,12 +13,15 @@ module.exports=function(dir)
 	{
 		file=file.replace(/[^-_a-z0-9]+/gi,'_');
 
-		message='['+type+'] '+message;
+		message='['+type+'] '+message.replace(/^\s+|\s+$/,''); // trim
 
 		if(!files[file]) files[file]=[message];
 		else files[file].push(message);
 
-		if(this.autoflush && !tm_autoflush) tm_autoflush=setTimeout(this.flush,2000);
+		if(this.autoflush)
+		{
+			if(!tm_autoflush) tm_autoflush=setTimeout(this.flush,2000);
+		}
 		else this.flush();
 	};
 
@@ -33,11 +36,9 @@ module.exports=function(dir)
 
 	this.flush=() =>
 	{
-		if(this.autoflush)
-		{
-			if(!tm_autoflush) tm_autoflush=setTimeout(this.flush,2000);
-		}
-		else this.stopflush();
+		this.stopflush();
+
+		if(this.autoflush) tm_autoflush=setTimeout(this.flush,2000);
 
 		for(var file in files)
 		{
