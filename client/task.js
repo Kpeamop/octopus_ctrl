@@ -69,7 +69,11 @@ exports.task=Task=function(alias,cmd,args=[])
 			private.app.stderr.on('data',text => this.ev.stderr(text.toString()) );
 			// private.app.on('close',(err_code) => { this.ev.close(err_code); });
 			private.app.on('exit',err_code => this.ev.exit(err_code));
-			private.app.on('error',err => console.log(err));
+			private.app.on('error',err =>
+			{
+				if(err.errno=='ENOENT') this.ev.exit('File '+cmd+' not found.');
+				else console.log(err);
+			});
 
 			this.ev.start(cmd,args);
 		}

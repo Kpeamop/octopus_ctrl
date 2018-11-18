@@ -159,8 +159,8 @@ exports.task=Task=function(props)
 
 		if(!this.props.pid)
 		{
-			this.props.execution.start=parseInt((+new Date()/1000).toFixed(0));
-			this.props.execution.end=0;
+			// this.props.execution.start=parseInt((+new Date()/1000).toFixed(0));
+			// this.props.execution.end=0;
 
 			this.ev.run();
 		}
