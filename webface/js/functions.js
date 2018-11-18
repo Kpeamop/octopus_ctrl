@@ -17,7 +17,7 @@ function timeFormat(ts,format,ms)
 
 	var d=new Date(ms ? ts : ts*1000);
 
-	var dt=s => (i => { s=='Month' && i++; return i<10 ? '0'+i : i; })(d['get'+s]());
+	var dt=s => (i => { s=='Month' && i++; r=i<10 ? '0'+i : i; return s=='Milliseconds' && i<100 ? '0'+r : r; })(d['get'+s]());
 
 	return format.replace(/[ymdhisx]/g,i => dt({y:'FullYear',m:'Month',d:'Date',h:'Hours',i:'Minutes',s:'Seconds',x:'Milliseconds'}[i]) );
 }

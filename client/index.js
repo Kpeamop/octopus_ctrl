@@ -102,7 +102,7 @@ module.exports=Client=function()
 		})
 		.on('error',(err) =>
 		{
-			if(debug) console.log('error',err);
+			if(debug) console.log('error:',err.syscall || '',err.code || '');
 		})
 		.on('close',function()
 		{
