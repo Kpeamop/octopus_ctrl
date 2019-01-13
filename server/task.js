@@ -110,7 +110,7 @@ exports.task=Task=function(props)
 			this.log.addSystem('stopped at err:'+err_code,client);
 		},
 
-		kill: () => {},
+		kill: () => this.log.addSystem('kill'),
 		run: () => {},
 
 		update_prop: (prop,value) => {}
@@ -145,12 +145,7 @@ exports.task=Task=function(props)
 	{
 		if(debug) console.log('kill',this.props.alias);
 
-		if(this.props.pid>0)
-		{
-			this.log.addSystem('kill');
-
-			this.ev.kill();
-		}
+		if(this.props.pid>0) this.ev.kill();
 	};
 
 	this.run=() =>
