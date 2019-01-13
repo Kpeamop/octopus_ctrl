@@ -63,13 +63,40 @@ exports.task=Task=function(props)
 						priority: ''
 					};
 
-	this.props_filter=(mask,a,replace) =>
+	// todo: переделать на отдельный объект
+	this.props_filter=(mask,a,replace,cb_update) =>
 	{
 		var r={};
 
-		for(var i in mask)
-			if(a[i]===undefined) r[i]=mask[i];
-			else r[i]=a[i];
+		if(cb_update instanceof Function)
+		{
+			Object.keys(mask).forEach(i =>
+			{
+				Object.defineProperty(r,'_'+i,{ value: mask[i], writable: true, enumerable: false });
+
+				Object.defineProperty(r,i,
+				{
+					enumerable: true,
+					get: function() { return this['_'+i]; },
+					set: function(v)
+					{
+						var old=this['_'+i];
+
+						this['_'+i]=v;
+
+						cb_update(i,v,old);
+					}
+				});
+
+				if(a[i]!==undefined) r[i]=a[i];
+			});
+		}
+		else
+		{
+			for(var i in mask)
+				if(a[i]===undefined) r[i]=mask[i];
+				else r[i]=a[i];
+		}
 
 		if(typeof replace=='object')
 			for(var i in replace)
@@ -78,7 +105,7 @@ exports.task=Task=function(props)
 		return r;
 	};
 
-	this.props=this.props_filter(mask_def,props);
+	this.props=this.props_filter(mask_def,props,{},(prop,val,old) => { console.log(prop,val,old); });
 
 	this.ev=
 	{
