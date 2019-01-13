@@ -41,7 +41,10 @@ module.exports=Server=function()
 			else console.log('Can\'t start "'+task.props.alias+'". Not found any client.');
 		},
 
-		update_prop: (prop,value,task) => {},
+		update_prop: (prop,value,task) =>
+		{
+			if(debug) console.log(prop,value,task);
+		},
 		log_add_msg: (type,client,ts,msg,task) => this.logger.add_msg(task.props.alias,msg,type)
 	};
 
