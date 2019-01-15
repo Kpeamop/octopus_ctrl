@@ -1,6 +1,8 @@
 const fs=require('fs');
 const inc=require('../include');
 
+// todo: переделать на setInterval и добавлять метку времени при поступлении сообщения
+
 module.exports=function(dir)
 {
 	var files={};

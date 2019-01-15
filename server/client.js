@@ -1,9 +1,9 @@
-debug=true;
-
 const dns=require('dns');
 
 exports.client=Client=function(sock,props)
 {
+	var debug=true;
+
 	this.socket=sock;
 
 	this.props_filter=(a) =>
