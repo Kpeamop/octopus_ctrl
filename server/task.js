@@ -1,12 +1,11 @@
-debug=true;
-
 const fs=require('fs');
-
 const path=require('path');
 const { log }=require('./log');
 
 exports.task=Task=function(props)
 {
+	var debug=false;
+
 	var private=
 	{
 		tm_autoreset: null
@@ -105,8 +104,6 @@ exports.task=Task=function(props)
 		return r;
 	};
 
-	this.props=this.props_filter(mask_def,props,{},(prop,val,old) => { console.log(prop,val,old); });
-
 	this.ev=
 	{
 		start: (starttime,pid,client) =>
@@ -140,7 +137,7 @@ exports.task=Task=function(props)
 		kill: () => this.log.addSystem('kill'),
 		run: () => {},
 
-		update_prop: (prop,value) => {}
+		update_prop: (prop,value,oldvalue) => {}
 	};
 
 	this.autoreset=timeout =>
@@ -190,6 +187,13 @@ exports.task=Task=function(props)
 
 	this.toData=() => this.props_filter(mask_def,this.props,{ log_counters: this.log.counters() });
 	this.saveData=() => this.props_filter(mask_save,this.props);
+
+	this.props=this.props_filter(mask_def,props,{},(prop,val,old) =>
+	{
+		if(debug) console.log(prop,val);
+
+		this.ev.update_prop(prop,val,old);
+	});
 };
 
 exports.tasklist=TaskList=function()
@@ -215,7 +219,7 @@ exports.tasklist=TaskList=function()
 		kill: (task) => {},
 		run: (task) => {},
 
-		update_prop: (prop,value,task) => {},
+		update_prop: (prop,value,oldvalue,task) => {},
 		log_add_msg: (type,client,ts,msg,task) => {}
 	};
 
@@ -256,10 +260,10 @@ exports.tasklist=TaskList=function()
 			};
 
 			var temp_update_prop=task.ev.update_prop;
-			task.ev.update_prop=(prop,value) =>
+			task.ev.update_prop=(prop,value,oldvalue) =>
 			{
-				temp_update_prop(prop,value);
-				this.ev.update_prop(prop,value,task);
+				temp_update_prop(prop,value,oldvalue);
+				this.ev.update_prop(prop,value,oldvalue,task);
 			};
 
 			var temp_log_add_msg=task.log.ev.add_msg;
