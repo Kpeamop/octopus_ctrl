@@ -1,17 +1,17 @@
-debug=true;
-
 const net=require('net');
 const path=require('path');
 const { client,clientlist }=require('./client');
 const { task,tasklist }=require('./task');
 const logger=require('./logger');
-// const cron=require('./cron');
+const cron=require('./cron');
 
 module.exports=Server=function()
 {
+	var debug=true;
+
 	this.config={ connection: { port: 6778 }, autokill:5000 };
 
-	// this.cron=new cron();
+	this.cron=new cron();
 	this.tasks=new tasklist();
 	this.clients=new clientlist();
 	this.logger=new logger(path.dirname(__dirname)+'/logs');
@@ -41,9 +41,10 @@ module.exports=Server=function()
 			else console.log('Can\'t start "'+task.props.alias+'". Not found any client.');
 		},
 
-		update_prop: (prop,value,task) =>
+		update_prop: (prop,value,oldvalue,task) =>
 		{
 			if(debug) console.log(prop,value,task);
+			console.log(debug);
 		},
 		log_add_msg: (type,client,ts,msg,task) => this.logger.add_msg(task.props.alias,msg,type)
 	};
