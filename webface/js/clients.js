@@ -78,7 +78,7 @@ function Client(parent_item)
 		this.element('active').classList.add(v ? 'green' : 'red');
 	});
 	this.bind('enabled',	v => this.value('enabled',v) );
-	this.bind('alias',		v => this.value('alias',v) );
+	this.bind('alias',		v => this.value('alias',this.data('hostname') ? this.data('hostname') : v) );
 	this.bind('ip',			v => this.value('ip',v) );
 	this.bind('loadavg',	v => this.value('loadavg',v.map(i=>i.toFixed(2)).join(', ')) );
 	this.bind('starttime',	v => this.value('uptime',totime((+new Date()/1000).toFixed(0)-v).replace(' ',' day(s) ')) );

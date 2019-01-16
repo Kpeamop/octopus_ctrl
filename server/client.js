@@ -33,7 +33,7 @@ exports.client=Client=function(sock,props)
 
 	dns.reverse(this.props.ip,(err,hostname) =>
 	{
-		if(hostname && hostname.length>0) this.props.alias=this.props.hostname=hostname;
+		if(hostname && hostname.length>0) /*this.props.alias=*/this.props.hostname=hostname instanceof Array ? hostname[0] : hostname;
 	});
 
 	this.ev=
