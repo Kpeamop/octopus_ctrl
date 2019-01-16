@@ -10,7 +10,7 @@ module.exports=Client=function()
 	var private=
 	{
 		count_reconnect: 0,
-		config: { connection: { port: 6778, host: '127.0.0.1' }, autokill: 5000 },
+		config: { connection: { port: 6778, server_host: '127.0.0.1' }, autokill: 5000 },
 		client: null,
 		tasks: new tasklist(),
 		tm_loadavg: null,
@@ -142,7 +142,7 @@ module.exports=Client=function()
 		private.client.rconnect=function()
 		{
 			private.count_reconnect++;
-			this.connect(private.config.connection.port,private.config.connection.host);
+			this.connect(private.config.connection.port,private.config.connection.server_host);
 		};
 
 		private.client.send=function(data)
