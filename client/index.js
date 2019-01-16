@@ -141,6 +141,8 @@ module.exports=Client=function()
 
 		private.client.rconnect=function()
 		{
+			console.log('Try connect to:',private.config.connection.server_host+':'+private.config.connection.port);
+
 			private.count_reconnect++;
 			this.connect(private.config.connection.port,private.config.connection.server_host);
 		};
