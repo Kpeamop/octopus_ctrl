@@ -126,7 +126,8 @@ exports.task=Task=function(props)
 		{
 			this.log.addStderr(msg,client);
 		},
-		// close: (err_code) => {},
+		enable_change: active => {},
+		stop: (err_code) => {},
 		exit: (endtime,err_code,client) =>
 		{
 			this.props.pid=0;
@@ -134,6 +135,8 @@ exports.task=Task=function(props)
 			this.props.execution.err_code=err_code;
 
 			this.log.addSystem('stopped at err:'+err_code,client);
+
+			this.ev.stop(err_code);
 		},
 
 		kill: () => this.log.addSystem('kill'),
@@ -155,6 +158,8 @@ exports.task=Task=function(props)
 
 					this.log.addSystem('autoreset');
 					if(debug) console.log('autoreset',this.props.alias);
+
+					this.ev.stop(null);
 
 					private.tm_autoreset=null;
 				},timeout);
@@ -195,6 +200,10 @@ exports.task=Task=function(props)
 		this.props=this.props_filter(mask_def,props,{},(prop,val,old) =>
 		{
 			if(debug) console.log(prop,val);
+
+			if(prop=='enabled') this.ev.enable_change(val);
+
+			this.ev.update_prop(prop,val,old);
 		});
 	};
 
