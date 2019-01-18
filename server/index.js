@@ -167,4 +167,6 @@ module.exports=Server=function()
 				() => { console.log('octopus server runing on','\t:'+this.config.connection.port); }
 		);
 	};
+
+	this.tasks.loadFromFile();
 };

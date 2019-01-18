@@ -62,6 +62,8 @@ exports.task=Task=function(props)
 						priority: ''
 					};
 
+	this.props={};
+
 	// todo: переделать на отдельный объект
 	this.props_filter=(mask,a,replace,cb_update) =>
 	{
@@ -188,26 +190,21 @@ exports.task=Task=function(props)
 	this.toData=() => this.props_filter(mask_def,this.props,{ log_counters: this.log.counters() });
 	this.saveData=() => this.props_filter(mask_save,this.props);
 
-	this.props=this.props_filter(mask_def,props,{},(prop,val,old) =>
+	this.load=props =>
 	{
-		if(debug) console.log(prop,val);
+		this.props=this.props_filter(mask_def,props,{},(prop,val,old) =>
+		{
+			if(debug) console.log(prop,val);
+		});
+	};
 
-		this.ev.update_prop(prop,val,old);
-	});
+	if(props!==undefined) this.load(props);
 };
 
 exports.tasklist=TaskList=function()
 {
 	var dbf=path.dirname(__dirname)+'/db.json',
 		tasks=[];
-
-	try
-	{
-		fs.accessSync(dbf);
-
-		tasks=JSON.parse(fs.readFileSync(dbf));
-	}
-	catch(e) {}
 
 	this.ev=
 	{
@@ -234,9 +231,11 @@ exports.tasklist=TaskList=function()
 
 	this.add=function(a)
 	{
-		var task=new Task(a);
+		var task=new Task();
 
 		this.addObject(task);
+
+		task.load(a);
 
 		return task;
 	};
@@ -382,5 +381,16 @@ exports.tasklist=TaskList=function()
 	this.toData=() => tasks.map(e => e.toData());
 	this.saveData=() => tasks.map(e => e.saveData());
 
-	tasks=tasks.map(e => this.indexOfAlias(e.alias)<0 ? this.add(e) : null).filter(e => e!==null);
+	this.loadFromFile=() =>
+	{
+		try
+		{
+			fs.accessSync(dbf);
+
+			tasks=JSON.parse(fs.readFileSync(dbf));
+		}
+		catch(e) {}
+
+		tasks=tasks.map(e => this.indexOfAlias(e.alias)<0 ? this.add(e) : null).filter(e => e!==null);
+	};
 };
