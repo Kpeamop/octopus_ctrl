@@ -151,7 +151,7 @@ exports.task=Task=function(props)
 				{
 					this.props.pid=0;
 					this.props.execution.end=parseInt((+new Date()/1000).toFixed(0));
-					this.props.execution.err_code=0;
+					this.props.execution.err_code=null;
 
 					this.log.addSystem('autoreset');
 					if(debug) console.log('autoreset',this.props.alias);
