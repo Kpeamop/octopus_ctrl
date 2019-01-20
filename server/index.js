@@ -43,8 +43,13 @@ module.exports=Server=function()
 
 		update_prop: (prop,value,oldvalue,task) =>
 		{
-			if(debug) console.log(prop,value,task);
-			console.log(debug);
+			if(prop=='starttime')
+			{
+				this.cron.unregister(task.props.alias);
+
+				if(['interval','totime'].indexOf(value.type)>=0)
+					this.cron.register(task.props.alias,value,task);
+			}
 		},
 		log_add_msg: (type,client,ts,msg,task) => this.logger.add_msg(task.props.alias,msg,type)
 	};

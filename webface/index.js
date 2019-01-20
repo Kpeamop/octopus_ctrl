@@ -157,7 +157,7 @@ module.exports=function()
 			break;
 
 			case 'enabled':
-
+				private.cron.enabled=req.body.value;
 			break;
 
 			case 'config':
@@ -244,7 +244,7 @@ module.exports=function()
 
 	this.run=function()
 	{
-		if(private.tasks===undefined || private.clients===undefined/* || private.cron===undefined*/) throw new Error('Can\'t found private "cron" or "tasks" or "clients".');
+		if(private.tasks===undefined || private.clients===undefined || private.cron===undefined) throw new Error('Can\'t found private "cron" or "tasks" or "clients".');
 
 		server.listen(private.config.connection.port_http,() =>
 		{
