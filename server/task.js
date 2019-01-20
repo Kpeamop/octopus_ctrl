@@ -197,6 +197,8 @@ exports.task=Task=function(props)
 
 	this.load=props =>
 	{
+		this.props.alias=props.alias; // уникальная метка, необходима до обновления свойств (до вызовов событий на обновление)
+
 		this.props=this.props_filter(mask_def,props,{},(prop,val,old) =>
 		{
 			if(debug) console.log(prop,val);
