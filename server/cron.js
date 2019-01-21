@@ -15,6 +15,8 @@ module.exports=function()
 		enable_change: active => {}
 	};
 
+	const ts=() => +new Date()/1000;
+
 	Object.defineProperty(this,'enabled',
 	{
 		get: () => private.enabled,
@@ -32,42 +34,19 @@ module.exports=function()
 
 		if(debug) console.log('cron: register task "'+alias+'" on',tm.type,(tm.type=='interval' ? tm.hi+':'+tm.mi+':'+tm.si : tm.dt+' '+tm.ht+':'+tm.mt));
 
-		private.tasks[alias]={ tm, tm_job: 0, ts_start: 0, ts_end: 0 };
-
-		const ts=() => +new Date()/1000;
+		private.tasks[alias]={ task };
 
 		switch(tm.type)
 		{
 			case 'interval':
-				var interval=tm.hi*3600+tm.mi*60+tm.si;
+				private.tasks[alias].interval=parseInt(tm.hi)*3600+parseInt(tm.mi)*60+parseInt(tm.si);
 
-				// var launch=() =>
-				// {
-				// 	if(task.props.enabled)
-
-				// };
-
-				// task.run();
-
-					// setInterval();
-
-				task.ev.enable_change=active =>
-				{
-					;
-				};
-
-				task.ev.stop=err_code =>
-				{
-					console.log(111111);
-				};
-
-
-
-				;
+				task.ev.enable_change=active => {};
+				task.ev.stop=err_code => {};
 			break;
 
 			case 'totime':
-				// tm.ht tm.mt tm.dt
+				// var startdate=tm.ht tm.mt tm.dt;
 				;
 			break;
 		}
@@ -84,9 +63,40 @@ module.exports=function()
 		{
 			if(debug) console.log('cron: unregister task "'+alias+'"');
 
-			if(private.tasks[alias].tm_job>0) clearTimeout(private.tasks[alias].tm_job);
-
 			delete private.tasks[alias];
 		}
 	};
+
+	setInterval(() =>
+	{
+		if(private.enabled)
+		{
+			for(alias of Object.keys(private.tasks))
+			{
+				var { task, interval }=private.tasks[alias],
+					{ props: {
+								starttime: { ttl },
+								execution: { start, end }
+							}
+					}=task;
+
+				start=parseInt(start);
+				end=parseInt(end);
+				ttl=parseInt(ttl);
+
+				if(task.props.enabled)
+				{
+					if(!end && start>0) // is running
+					{
+						if(ttl>0 && start+ttl<ts()) task.kill();
+					}
+					else if(!end || end+interval<ts()) // is stopped
+							{
+								task.run();
+							}
+				}
+			}
+		}
+
+	},1000);
 };
