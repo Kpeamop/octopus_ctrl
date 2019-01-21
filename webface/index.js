@@ -50,7 +50,7 @@ module.exports=function()
 		switch(file)
 		{
 			case 'index':
-
+				vars.enabled=private.cron.enabled;
 			break;
 
 			case 'test':
