@@ -235,14 +235,6 @@ module.exports=function()
 		res.send(JSON.stringify(data));
 	});
 
-	// server.use((err,req,res,next) =>
-	// {
-	// 	console.error(err.stack);
-	// 	res.type('text/plain');
-	// 	res.status(500);
-	// 	res.send('500 - server error');
-	// });
-
 	this.set=function(k,v)
 	{
 		private[k]=v;
