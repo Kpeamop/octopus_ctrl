@@ -15,8 +15,6 @@ module.exports=function()
 		enable_change: active => {}
 	};
 
-	const ts=() => +new Date()/1000;
-
 	Object.defineProperty(this,'enabled',
 	{
 		get: () => private.enabled,
@@ -34,7 +32,7 @@ module.exports=function()
 
 		if(debug) console.log('cron: register task "'+alias+'" on',tm.type,(tm.type=='interval' ? tm.hi+':'+tm.mi+':'+tm.si : tm.dt+' '+tm.ht+':'+tm.mt));
 
-		private.tasks[alias]={ task };
+		private.tasks[alias]={ task, inner_start: false };
 
 		switch(tm.type)
 		{
@@ -42,7 +40,7 @@ module.exports=function()
 				private.tasks[alias].interval=parseInt(tm.hi)*3600+parseInt(tm.mi)*60+parseInt(tm.si);
 
 				task.ev.enable_change=active => {};
-				task.ev.stop=err_code => {};
+				task.ev.stop=err_code => { private.tasks[alias].inner_start=false; };
 			break;
 
 			case 'totime':
@@ -67,33 +65,35 @@ module.exports=function()
 		}
 	};
 
+	const ts=() => +new Date()/1000;
+
 	setInterval(() =>
 	{
-		if(private.enabled)
+		for(alias of Object.keys(private.tasks))
 		{
-			for(alias of Object.keys(private.tasks))
+			var { task, interval, inner_start }=private.tasks[alias];
+			var { props: {
+							starttime: { ttl },
+							execution: { start, end }
+						}
+				}=task;
+
+			start=parseInt(start);
+			end=parseInt(end);
+			ttl=parseInt(ttl);
+
+			if(!end && start>0) // is running
 			{
-				var { task, interval }=private.tasks[alias],
-					{ props: {
-								starttime: { ttl },
-								execution: { start, end }
-							}
-					}=task;
+				if(ttl>0 && start+ttl<ts()) task.kill();
+			}
 
-				start=parseInt(start);
-				end=parseInt(end);
-				ttl=parseInt(ttl);
-
-				if(task.props.enabled)
+			if(private.enabled && task.props.enabled)
+			{
+				if(end+interval<ts() || !end && !start) // is stopped
 				{
-					if(!end && start>0) // is running
-					{
-						if(ttl>0 && start+ttl<ts()) task.kill();
-					}
-					else if(!end || end+interval<ts()) // is stopped
-							{
-								task.run();
-							}
+					private.tasks[alias].inner_start=true;
+
+					task.run();
 				}
 			}
 		}
