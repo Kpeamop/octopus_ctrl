@@ -1,6 +1,7 @@
 const http=require('http');
 const express=require('express');
 const compress=require('compression');
+const basic=require('express-basic-auth');
 const less=require('less');
 const fs=require('fs');
 
@@ -10,7 +11,7 @@ module.exports=function()
 
 	var private=
 	{
-		config: { connection: {port_http: 1188} },
+		config: { connection: { port_http: 1188 } },
 		cron: undefined,
 		tasks: undefined,
 		clients: undefined
@@ -24,6 +25,13 @@ module.exports=function()
 
 	server.use(express.json());
 	server.use(express.urlencoded({ extended: true }));
+
+	server.use(function (req,res,next)
+	{
+		if(Object.keys(private.config.users).length>0)
+			basic({ users: private.config.users, challenge: true })(req,res,next);
+		else next();
+	});
 
 	server.use('/js',express.static(__dirname+'/js'));
 	server.use('/images',express.static(__dirname+'/images'));

@@ -6,5 +6,9 @@ module.exports=
 			port: 6778,
 			port_http: 1188
 		},
-		autokill: 5000
+		autokill: 5000,
+		users:
+		{
+			// admin: 'password'
+		}
 	};
