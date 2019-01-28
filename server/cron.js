@@ -32,22 +32,21 @@ module.exports=function()
 
 		if(debug) console.log('cron: register task "'+alias+'" on',tm.type,(tm.type=='interval' ? tm.hi+':'+tm.mi+':'+tm.si : tm.dt+' '+tm.ht+':'+tm.mt));
 
-		private.tasks[alias]={ task, inner_start: false };
+		private.tasks[alias]={ task, inner_start: false,
+								interval: parseInt(tm.hi)*3600+parseInt(tm.mi)*60+parseInt(tm.si),
+								startdate: { h: parseInt(tm.ht), m: parseInt(tm.mt), d: parseInt(tm.dt) }
+							};
 
-		switch(tm.type)
-		{
-			case 'interval':
-				private.tasks[alias].interval=parseInt(tm.hi)*3600+parseInt(tm.mi)*60+parseInt(tm.si);
+		task.ev.enable_change=active => {};
+		task.ev.stop=err_code => { private.tasks[alias].inner_start=false; };
+		// switch(tm.type)
+		// {
+		// 	case 'interval':
+		// 	break;
 
-				task.ev.enable_change=active => {};
-				task.ev.stop=err_code => { private.tasks[alias].inner_start=false; };
-			break;
-
-			case 'totime':
-				// var startdate=tm.ht tm.mt tm.dt;
-				;
-			break;
-		}
+		// 	case 'totime':
+		// 	break;
+		// }
 	};
 
 	this.registered=function(alias)
@@ -71,9 +70,9 @@ module.exports=function()
 	{
 		for(alias of Object.keys(private.tasks))
 		{
-			var { task, interval, inner_start }=private.tasks[alias];
+			var { task, interval, startdate, inner_start }=private.tasks[alias];
 			var { props: {
-							starttime: { ttl },
+							starttime: { type, ttl },
 							execution: { start, end }
 						}
 				}=task;
@@ -86,15 +85,31 @@ module.exports=function()
 			{
 				if(ttl>0 && start+ttl<ts()) task.kill();
 			}
-
+			else
 			if(private.enabled && task.props.enabled)
 			{
-				if(end+interval<ts() || !end && !start) // is stopped
+				if(type=='interval' && (end+interval<ts() || !end && !start)) // is stopped
 				{
 					private.tasks[alias].inner_start=true;
 
 					task.run();
 				}
+				else
+				{
+					var d=new Date();
+					d.setDate(startdate.d);
+					d.setHours(startdate.h);
+					d.setMinutes(startdate.m);
+					d.setSeconds(0);
+
+					if(type=='totime' && +d/1000<ts() && (end<+d/1000 || !end))
+					{
+						private.tasks[alias].inner_start=true;
+
+						task.run();
+					}
+				}
+
 			}
 		}
 
