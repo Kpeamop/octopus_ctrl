@@ -46,7 +46,7 @@ mixin task_item
 				label.switch
 					input.t-enabled(type="checkbox")
 					.slider
-			.stat.server
+			.stat.client
 				a.t-client(href="") test-client1
 				br
 				| pid:
@@ -119,7 +119,7 @@ html
 			.menu
 				.tabs
 					.tab(sheet="tasks") Задачи
-					.tab(sheet="clients") Сервера
+					.tab(sheet="clients") Обработчики
 				.ctrl
 					| Запуск заданий
 					label.switch
