@@ -2,11 +2,12 @@ const dns=require('dns');
 
 exports.client=Client=function(sock,props)
 {
-	var debug=true;
+	var debug=false;
 
 	this.socket=sock;
 
-	this.props_filter=(a) =>
+	// todo: переделать на отдельный объект
+	this.props_filter=(a,cb_update) =>
 	{
 		var mask=
 				{
@@ -22,14 +23,47 @@ exports.client=Client=function(sock,props)
 				},
 			r={};
 
-		for(var i in mask)
-			if(a[i]===undefined) r[i]=mask[i];
-			else r[i]=a[i];
+		if(cb_update instanceof Function)
+		{
+			Object.keys(mask).forEach(i =>
+			{
+				Object.defineProperty(r,'_'+i,{ value: mask[i], writable: true, enumerable: false });
+
+				Object.defineProperty(r,i,
+				{
+					enumerable: true,
+					get: function() { return this['_'+i]; },
+					set: function(v)
+					{
+						var old=this['_'+i];
+
+						this['_'+i]=v;
+
+						cb_update(i,v,old);
+					}
+				});
+
+				if(a[i]!==undefined) r[i]=a[i];
+			});
+		}
+		else
+		{
+			for(var i in mask)
+				if(a[i]===undefined) r[i]=mask[i];
+				else r[i]=a[i];
+		}
 
 		return r;
 	};
 
-	this.props=this.props_filter(props || {});
+	this.props=this.props_filter(props || {},(prop,val,old) =>
+	{
+		if(debug) console.log(prop,val);
+
+		if(prop=='enabled') this.ev.enable_change(val);
+
+		this.ev.update_prop(prop,val,old);
+	});
 
 	dns.reverse(this.props.ip,(err,hostname) =>
 	{
@@ -46,7 +80,10 @@ exports.client=Client=function(sock,props)
 		start:	(starttime,pid,task)	=> {},
 		stdout:	(text,task)				=> {},
 		stderr:	(text,task)				=> {},
-		exit:	(endtime,err_code,task)	=> {}
+		exit:	(endtime,err_code,task)	=> {},
+
+		enable_change: active				=> {},
+		update_prop: (prop,value,oldvalue)	=> {}
 	};
 
 	this.socket.on('data',(data) =>
