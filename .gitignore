@@ -1,6 +1,5 @@
 /node_modules/
 /logs/
-/db.json
-/*-lock.json
+/*.json
 *.css
 /config/index.js

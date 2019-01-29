@@ -1,0 +1,101 @@
+[
+    {
+        "alias": "testtask1",
+        "description": "описание задачи",
+        "enabled": false,
+        "env": {
+            "NLS_LANG": "RUS_NERUS",
+            "NLS_TIME": "OLDTIME",
+            "TEST_ENV": "ENV text"
+        },
+        "starttime": {
+            "type": "interval",
+            "ht": "",
+            "mt": "12",
+            "dt": "",
+            "hi": 0,
+            "mi": "5",
+            "si": "0",
+            "ttl": "2"
+        },
+        "cmd": "./test-task.sh",
+        "args": [
+            "first arg",
+            23,
+            "string text variable"
+        ],
+        "multiple": false,
+        "priority": "127.0.0.1"
+    },
+    {
+        "alias": "testtask2",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipisicing elit. ",
+        "enabled": false,
+        "env": {},
+        "starttime": {
+            "type": "totime",
+            "ht": "7",
+            "mt": "17",
+            "dt": "28",
+            "hi": 0,
+            "mi": "2",
+            "si": 30,
+            "ttl": 7200
+        },
+        "cmd": "php",
+        "args": [
+            "-r",
+            "echo 123; exit(22);"
+        ],
+        "multiple": false,
+        "priority": "127.0.0.2"
+    },
+    {
+        "alias": "testtask3",
+        "description": "Deleniti omnis, sit, earum rerum labore quo expedita mollitia hic culpa vitae.",
+        "enabled": false,
+        "env": {},
+        "starttime": {
+            "type": "external",
+            "ht": 0,
+            "mt": 1,
+            "dt": 0,
+            "hi": 0,
+            "mi": 1,
+            "si": 0,
+            "ttl": 0
+        },
+        "cmd": "/bin/php",
+        "args": [
+            "script.php",
+            "first arg",
+            2,
+            "3 text"
+        ],
+        "multiple": false,
+        "priority": "127.0.0.33"
+    },
+    {
+        "alias": "testtask4",
+        "description": "Lorem ipsum dolor sit amet.",
+        "enabled": false,
+        "env": {},
+        "starttime": {
+            "type": "external",
+            "ht": 0,
+            "mt": 1,
+            "dt": 0,
+            "hi": 0,
+            "mi": 1,
+            "si": 0,
+            "ttl": 0
+        },
+        "cmd": "node",
+        "args": [
+            "-e",
+            "console.log({ test: true })"
+        ],
+        "multiple": false,
+        "priority": "127.0.0.133"
+    }
+]
