@@ -1,11 +1,9 @@
-function Tasks(parent_item)
+function Tasks(parent_item,editor)
 {
 	this.className='Tasks';
 	this.mclass_prefix='x-';
 
 	Tasks.parent.constructor.call(this,parent_item);
-
-	// var $this=this;
 
 	this.ev=
 	{
@@ -46,7 +44,7 @@ function Tasks(parent_item)
 		// insert
 		jdata.forEach(e =>
 		{
-			var task=new Task(this);
+			var task=new Task(this,editor);
 
 			task.ev=
 			{
@@ -60,7 +58,7 @@ function Tasks(parent_item)
 	};
 }
 
-function Task(parent_item)
+function Task(parent_item,editor)
 {
 	this.className='Task';
 	this.mclass_prefix='t-';
@@ -76,54 +74,41 @@ function Task(parent_item)
 		restart:	() => {}
 	};
 
-	// var $this=this;
-
-	var time=new TaskTime(this,this.element('time'));
-
-	time.ev.save=() =>
-	{
-		this.lockup=true;
-
-		this.ev.update('starttime',this.data('starttime',time.datas()),() => this.lockup=false);
-	};
-
 	this.bind('alias',		 v => this.value('alias',v));
 	this.bind('description', v => this.value('description',v));
 	this.bind('pid',		 v => this.value('pid',v));
-	this.bind('ram',		 v => this.value('ram',(v/1024/1024).toFixed(1)));
+	// this.bind('ram',		 v => this.value('ram',(v/1024/1024).toFixed(1)));
 	this.bind('enabled',	 v => this.value('enabled',v));
 	this.bind('client',		 v => this.value('client',v));
 	this.bind('log_counters',v =>
 	{
 			this.value('log-stdout',v.stdout);
 			this.value('log-stderr',v.stderr);
-	})
+	});
 	this.bind('starttime',	 v =>
 	{
-		if(!time.lockup) time.loadData(v);
-
 		var leedzero=int => int<10 ? '0'+int : int;
 
 		switch(v.type)
 		{
 			case 'totime':
 				this.value('starttype','по времени');
-				this.value('time-text',leedzero(v.ht)+':'+leedzero(v.mt)+' '+leedzero(v.dt));
+				this.value('time-text',leedzero(v.ht)+':'+leedzero(v.mt)+' '+leedzero(v.dt)+(v.ttl>0 ? '<br>'+'ttl:'+v.ttl : ''));
 			break;
 
 			case 'interval':
 				this.value('starttype','интервал');
-				this.value('time-text',leedzero(v.hi)+':'+leedzero(v.mi)+':'+leedzero(v.si)+'<br>'+'ttl:'+v.ttl);
+				this.value('time-text',leedzero(v.hi)+':'+leedzero(v.mi)+':'+leedzero(v.si)+(v.ttl>0 ? '<br>'+'ttl:'+v.ttl : ''));
 			break;
 
 			default:
 				this.value('starttype','ручной');
-				this.value('time-text','ручной');
+				this.value('time-text',(v.ttl>0 ? '<br>'+'ttl:'+v.ttl : ''));
 		}
 
 	});
-	this.bind('args',		v => this.value('cmdargs',this.data('cmd')+'\n'+v.join('\n')));
-	this.bind('execution',	v =>
+	this.bind(['args'],	v => this.value('cmdargs',this.data('cmd')+'\n'+v.join('\n')));
+	this.bind('execution',		v =>
 	{
 		var end=parseInt(v.end);
 		var start=parseInt(v.start);
@@ -152,12 +137,39 @@ function Task(parent_item)
 		this.ev.update('enabled',e.target.checked,() => this.lockup=false);
 	});
 
-	this.bindev('time-text','click',time.showmodal);
-
 	this.bindev('kill','click',		() => this.ev.kill());
 	this.bindev('restart','click',	() => this.ev.restart());
 
 	this.bindev(['logout','logerr'],'click',e => { e.preventDefault(); window.open('/log.html?task='+encodeURIComponent(this.data('alias'))); });
+
+	this.bindev('menu_edit','click',e => // DEBUG delete ENV
+	{
+		if(editor)
+		{
+			this.lockup=true;
+
+			editor.showmodal(this.datas(),need_update =>
+			{
+				if(need_update)
+				{
+					this.ev.update('description',editor.data('description'));
+					this.ev.update('env',editor.data('env'));
+					this.ev.update('cmd',editor.data('cmd'));
+					this.ev.update('args',editor.data('args'));
+					// this.ev.update('priority',editor.data('priority'));
+
+					// небольшая топорность (отложенное отключение запрета обновления lockup)
+					setTimeout(() => this.ev.update('starttime',editor.data('starttime'),() => this.lockup=false),200);
+				}
+				else this.lockup=false;
+			});
+		}
+	});
+
+	this.bindev('menu_delete','click',e =>
+	{
+		if(confirm('Удалить '+this.data('alias')+' ?')) alert(123);
+	});
 
 	// animated self destruct
 
@@ -187,30 +199,94 @@ function Task(parent_item)
 	};
 }
 
-function TaskTime(parent_item,parent_dom)
+function TaskEdit(parent_item)
 {
-	this.className='TaskTime';
-	this.mclass_prefix='tt-';
+	this.className='TaskEdit';
+	this.mclass_prefix='te-';
 
-	TaskTime.parent.constructor.call(this,parent_item,parent_dom);
+	TaskEdit.parent.constructor.call(this,parent_item);
 
-	this.lockup=false;
-
-	// var $this=this;
+	this.hide();
 
 	this.ev=
 	{
-		save: () => {}
+		close: (need_update) => {}
 	};
 
-	this.element('radio-i')['name']=
-	this.element('radio-t')['name']=
-	this.element('radio-m')['name']='radio_'+Math.random().toString().substr(2);
-
-	this.bind('type',	v =>
+	this.bindev('ok','click',() =>
 	{
-		if(!this.lockup)
-			switch(v)
+		this.ev.close(true,this.datas());
+
+		this.hide();
+	});
+
+	this.close=() =>
+	{
+		this.ev.close(false);
+
+		this.hide();
+	};
+
+	this.bindev(['cancel','bg'],'click',() => this.close() );
+
+	this.bindev('description',['keyup','change'],	() => this.data('description',this.value('description')) )
+		// .bindev('priority',['keyup','change'],	() => this.data('priority',this.value('priority')) )
+		.bindev('cmdargs',['change'], 		() =>
+		{
+			var cmdargs=this.value('cmdargs').split(/[\n\r]+/);
+
+			this.data('cmd',cmdargs.shift());
+			this.data('args',cmdargs.filter(v => !!v));
+		})
+		.bindev('env',['change'],			() =>
+		{
+			// this.data('priority',this.value('priority'))
+			var env=this.value('env').split(/[\n\r]+/);
+
+			var r={};
+
+			env.forEach(e =>
+			{
+				var m=e.split('='),
+					v=m.shift();
+
+				if(v) r[v]=m.join('=');
+			});
+
+			this.data('env',r);
+		});
+
+	this.bindev('radio-i','change',() => this.data('starttime').type='interval')
+		.bindev('radio-t','change',() => this.data('starttime').type='totime')
+
+		.bindev('dt',['keyup','change'],	() => this.data('starttime').dt=this.value('dt'))
+		.bindev('ht',['keyup','change'],	() => this.data('starttime').ht=this.value('ht'))
+		.bindev('mt',['keyup','change'],	() => this.data('starttime').mt=this.value('mt'))
+		.bindev('hi',['keyup','change'],	() => this.data('starttime').hi=this.value('hi'))
+		.bindev('mi',['keyup','change'],	() => this.data('starttime').mi=this.value('mi'))
+		.bindev('si',['keyup','change'],	() => this.data('starttime').si=this.value('si'))
+		.bindev('ttl',['keyup','change'],	() => this.data('starttime').ttl=this.value('ttl'));
+
+	this.showmodal=(data,cb_evclose) =>
+	{
+		this.data_clear();
+
+		this.bind('alias',			v => this.value('alias',v));
+		this.bind('description',	v => this.value('description',v));
+		this.bind('env',			v => this.value('env',
+			(function(o)
+			{
+				var r=[];
+
+				for(var i of Object.keys(o)) r.push(i+'='+o[i]);
+
+				return r.join('\n');
+			})(v)
+		));
+		this.bind(['cmd','args'],	v => this.value('cmdargs',this.data('cmd')+'\n'+(this.data('args') ? this.data('args').join('\n') : '')));
+		this.bind('starttime',		v =>
+		{
+			switch(v.type)
 			{
 				case 'interval':
 					this.element('radio-i')['checked']=true;
@@ -221,37 +297,23 @@ function TaskTime(parent_item,parent_dom)
 				break;
 
 				default:
-					this.element('radio-m')['checked']=true;
+					this.element('radio-i')['checked']=false;
+					this.element('radio-t')['checked']=false;
 			}
-	})
-	.bindev('radio-i','change',() => this.data('type','interval'))
-	.bindev('radio-t','change',() => this.data('type','totime'))
-	.bindev('radio-m','change',() => this.data('type','manual'))
-	;
-	this.bind('ht',		v => this.value('ht',v))	.bindev('ht',['keyup','change'],	() => this.data('ht',this.value('ht')));
-	this.bind('mt',		v => this.value('mt',v))	.bindev('mt',['keyup','change'],	() => this.data('mt',this.value('mt')));
-	this.bind('dt',		v => this.value('dt',v))	.bindev('dt',['keyup','change'],	() => this.data('dt',this.value('dt')));
-	this.bind('hi',		v => this.value('hi',v))	.bindev('hi',['keyup','change'],	() => this.data('hi',this.value('hi')));
-	this.bind('mi',		v => this.value('mi',v))	.bindev('mi',['keyup','change'],	() => this.data('mi',this.value('mi')));
-	this.bind('si',		v => this.value('si',v))	.bindev('si',['keyup','change'],	() => this.data('si',this.value('si')));
-	this.bind('ttl',	v => this.value('ttl',v))	.bindev('ttl',['keyup','change'],	() => this.data('ttl',this.value('ttl')));
 
-	this.bindev('ok','click',() =>
-	{
-		this.ev.save.call(this);
+			this.value('dt',v.dt);
+			this.value('ht',v.ht);
+			this.value('mt',v.mt);
+			this.value('hi',v.hi);
+			this.value('mi',v.mi);
+			this.value('si',v.si);
+			this.value('ttl',v.ttl);
+		});
 
-		this.lockup=false;
-		this.hide();
-	});
-	this.bindev('cancel','click',() =>
-	{
-		this.lockup=false;
-		this.hide();
-	});
+		if(cb_evclose instanceof Function) this.ev.close=cb_evclose;
 
-	this.showmodal=() =>
-	{
-		this.lockup=true;
+		this.loadData(data);
+
 		this.show();
 	};
 }

@@ -136,7 +136,7 @@ function Control(parent_item,parent_dom)
 	};
 
 	/**
-	* Получение/установка основного изменяемого аттрибута тега. Для разных тегов основной аттрибут разный
+	* Получение/установка ствойства DOM елемента.
 	* input[type=checkbox|radio].checked
 	* input.value
 	* textarea.value
@@ -199,7 +199,9 @@ function Control(parent_item,parent_dom)
 		for(var i in data) r[i.toString().replace('_','')]=data[i];
 
 		return r;
-	}
+	};
+
+	this.data_clear=() => data={};
 
 	this.data=function(key,val)
 	{
@@ -208,13 +210,18 @@ function Control(parent_item,parent_dom)
 
 	this.bind=function(key,func)
 	{
-		if(typeof key!='string') return console.error('Invalid bind key:',key);
+		if(typeof key!='string' && !(key instanceof Array)) return console.error('Invalid bind key(s):',key);
 		if(typeof func!='function') return console.error('Invalid bind function:',func);
 
-		Object.defineProperty(data,key,
+		if(typeof key=='string') key=[key];
+
+		key.forEach(k =>
 		{
-			set: v => { data['_'+key]=v; func(v); },
-			get: () => data['_'+key]
+			Object.defineProperty(data,k,
+			{
+				set: v => { data['_'+k]=v; func(v); },
+				get: () => data['_'+k]
+			});
 		});
 
 		return this;

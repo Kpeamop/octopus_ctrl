@@ -2,15 +2,17 @@ $(document).ready(() =>
 {
 	extend(Tasks,Control);
 	extend(Task,Control);
-	extend(TaskTime,Control);
 	extend(Clients,Control);
 	extend(Client,Control);
+	extend(TaskEdit,Control);
 
-	var tasks,clients;
+	var tasks,clients/*,editor*/;
 
 	try
 	{
-		tasks=new Tasks('content');
+		// editor=null;
+		editor=new TaskEdit('body');
+		tasks=new Tasks('content',editor);
 		clients=new Clients('content');
 	}
 	catch(e)

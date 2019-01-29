@@ -1,45 +1,93 @@
-mixin task_time
-	.select
-		label
-			input.tt-radio-i(type="radio" value="interval")
-			| &nbsp;по интервалу
-		.input
-			input.tt-hi(type="text" maxlength="2" placeholder="hh")
-			|:
-			input.tt-mi(type="text" maxlength="2" placeholder="mm")
-			|:
-			input.tt-si(type="text" maxlength="2" placeholder="ss")
-			| &nbsp;
-			input.tt-ttl.w2(type="text" maxlength="4" placeholder="TTL")
-		label
-			input.tt-radio-t(type="radio" value="totime")
-			| &nbsp;по времени
-		.input
-			input.tt-ht(type="text" maxlength="2" placeholder="hh")
-			|:
-			input.tt-mt(type="text" maxlength="2" placeholder="mm")
-			| &nbsp; &nbsp;
-			input.tt-dt(type="text" maxlength="2" placeholder="dd")
-		label
-			input.tt-radio-m(type="radio" value="manual")
-			| &nbsp;ручной
-		.input
-			input.tt-ok(type="button" value="OK")
-			| &nbsp;
-			input.tt-cancel(type="button" value="Отмена")
+mixin task_edit
+	.task_edit
+		.te-bg.bg
+		.form
+			.row
+				.te-type.head Редактирование
+			.row
+				.caption Псевдоним
+				.value
+					span.te-alias
+						| testtask
+			.row
+				.caption Описание
+				.value
+					input.te-description(value="123")
+			.row
+				.caption Строка запуска
+					br
+					small (по параметру в строке)
+				.value
+					textarea.te-cmdargs(cols="20" rows="5")
+			.row
+				.caption Переменные окружения
+					br
+					small (по переменной в строке var=val)
+				.value
+					textarea.te-env(cols="20" rows="5")
+			.row
+				.caption Приоритетный сервер
+				.value
+					select.te-priority("disabled"="true")
+						option none
+			.row
+				.caption Режим запуска
+				.value
+					label
+						input.te-radio-i(type="radio" name="start_type")
+						| интервальный
+					label
+						input.te-radio-t(type="radio" name="start_type")
+						| по времени
+			.row
+				.caption Интервальный запуск
+				.value
+					span(title="часы")
+						| чч
+						input.te-hi(value="12" maxlength="2")
+					span(title="минуты")
+						| мм
+						input.te-mi(value="12" maxlength="2")
+					span(title="секунды")
+						| сс
+						input.te-si(value="12" maxlength="2")
+			.row
+				.caption Временной запуск
+				.value
+					span(title="дни")
+						| дд
+						input.te-dt(value="12" maxlength="2")
+					span(title="часы")
+						| чч
+						input.te-ht(value="12" maxlength="2")
+					span(title="минуты")
+						| мм
+						input.te-mt(value="12" maxlength="2")
+			.row
+				.caption Таймаут (TTL)
+					br
+					small (в секундах)
+				.value.left
+					input.te-ttl.no100w(value="123" size="6")
+			.row.but
+				input.te-ok.ok(value="OK" type="button")
+				input.te-cancel.cancel(value="Cancel" type="button")
 
 mixin task_item
 	.item
 		.head
 			span.t-alias alias-of-task
 			.t-description.description Lorem ipsum dolor sit amet
+			.menu
+				.list
+					.t-menu_edit.item Редактировать
+					.t-menu_delete.item Удалить
 		.wrap
 			.t-time.time
 				| тип запуска:
 				.t-starttype интервал
 				br
-				br
-				a.t-time-text(href="" onclick="javascript:return false") 10:30:00 2d
+				.t-time-text(href="" onclick="javascript:return false") 10:30:00 2d
 			.ctrl
 				input.t-kill(type="button" value="kill")
 				input.t-restart(type="button" value="restart")
@@ -47,14 +95,14 @@ mixin task_item
 					input.t-enabled(type="checkbox")
 					.slider
 			.stat.server
-				a.t-client(href="") test-client1
+				span.t-client(href="") test-client1
 				br
 				| pid:
 				span.t-pid 1234
 				br
-				| RAM:
-				span.t-ram 10
-				| MB
+				//| RAM:
+				//span.t-ram 10
+				//| MB
 			.stat.script
 				span.starttime starttime:
 					span.t-starttime 10:30:21
@@ -113,7 +161,7 @@ html
 		script(src="/js/clients.js")
 		script(src="/js/common.js")
 		title Octopus Control
-	body
+	body#body
 		.head Octopus Control
 		.content#content
 			.menu
@@ -135,8 +183,8 @@ html
 			.tasks.tabsheet
 		script(id="Task" type="html/template")
 			+task_item
-		script(id="TaskTime" type="html/template")
-			+task_time
+		script(id="TaskEdit" type="html/template")
+			+task_edit
 
 		script(id="Clients" type="html/template")
 			.clients.tabsheet
