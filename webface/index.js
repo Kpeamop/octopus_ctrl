@@ -110,7 +110,10 @@ module.exports=function()
 			break;
 
 			case 'config':
-
+				data=Object.assign({
+										enabled: private.cron.enabled
+									},
+									private.config);
 			break;
 
 			case 'log':
