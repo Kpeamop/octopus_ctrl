@@ -394,14 +394,16 @@ exports.tasklist=TaskList=function()
 
 	this.loadFromFile=() =>
 	{
+		var t;
+
 		try
 		{
 			fs.accessSync(dbf);
 
-			tasks=JSON.parse(fs.readFileSync(dbf));
+			t=JSON.parse(fs.readFileSync(dbf));
 		}
 		catch(e) {}
 
-		tasks=tasks.map(e => this.indexOfAlias(e.alias)<0 ? this.add(e) : null).filter(e => e!==null);
+		t.forEach(e => this.indexOfAlias(e.alias)<0 ? this.add(e) : null);
 	};
 };
