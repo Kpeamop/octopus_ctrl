@@ -267,9 +267,11 @@ function TaskEdit(parent_item)
 		.bindev('si',['keyup','change'],	() => this.data('starttime').si=this.value('si'))
 		.bindev('ttl',['keyup','change'],	() => this.data('starttime').ttl=this.value('ttl'));
 
-	this.showmodal=(data,cb_evclose) =>
+	this.showmodal=(data,cb_evclose,_flagadd) =>
 	{
 		this.data_clear();
+
+		this.value('type',_flagadd ? 'Добавление' : 'Редактирование');
 
 		this.bind('alias',			v => this.value('alias',v));
 		this.bind('description',	v => this.value('description',v));

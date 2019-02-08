@@ -6,11 +6,10 @@ $(document).ready(() =>
 	extend(Client,Control);
 	extend(TaskEdit,Control);
 
-	var tasks,clients/*,editor*/;
+	var tasks,clients,editor;
 
 	try
 	{
-		// editor=null;
 		editor=new TaskEdit('body');
 		tasks=new Tasks('content',editor);
 		clients=new Clients('content');
@@ -39,9 +38,6 @@ $(document).ready(() =>
 	};
 
 	clients.ev.update=(client,property,value,unlock_cb)	=> jsonRequest('/set/client',{alias:client.data('alias'),property,value},unlock_cb);
-
-	$('#enabled').on('click',e => jsonRequest('/set/enabled',{'value':e.target.checked},() => {}) );
-	$('#killall').on('click',e => jsonRequest('/do/kill/all',{},() => {}) );
 
 	var refresh_data=() =>
 	{
@@ -81,4 +77,44 @@ $(document).ready(() =>
 	refresh_data();
 
 	setInterval(refresh_data,1000);
+
+	$('#enabled').on('click',e => jsonRequest('/set/enabled',{'value':e.target.checked},() => {}) );
+	$('#killall').on('click',e => jsonRequest('/do/kill/all',{},() => {}) );
+	$('#newtask').on('click',e =>
+	{
+		var alias=prompt('Введите метку задачи (только латиница, цифры и знак подчеривания):','task_'+(+new Date()/1000).toFixed(0));
+
+		if(alias!==null)
+		{
+			alias=alias.replace(/[^_a-z0-9]/,'');
+
+			jsonRequest('/do/newtask',{ alias },(err,jdata) =>
+			{
+				var json={};
+
+				try
+				{
+					json=JSON.parse(jdata);
+				}
+				catch(e) {};
+
+				if(json.result)
+				{
+					// костыль на добавление
+					// todo: единая процедура для редактирования/добавления
+					editor.showmodal({ alias,cmd: '',args: '',env: '',description: '',starttime: { type: '', dt: '',ht: '',mt: '',hi: '',mi: '',si: '',ttl: '' } },need_update =>
+					{
+						if(need_update)
+						{
+							['description','env','cmd','args','starttime'/*,'priority'*/].forEach(e =>
+							{
+								jsonRequest('/set/task',{ alias,property: e,value: editor.data(e) },() => {});
+							});
+						}
+					},true);
+				}
+				else alert('Ошибка добавления, возможно задача "'+alias+'" уже существует.');
+			});
+		}
+	});
 });

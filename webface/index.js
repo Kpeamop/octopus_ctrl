@@ -169,7 +169,7 @@ module.exports=function()
 			break;
 
 			case 'config':
-
+				// todo: может быть, когда нибудь, изменение конфигов будет осуществляться из интерфейса
 			break;
 		}
 
@@ -214,6 +214,27 @@ module.exports=function()
 
 						data.result=true;
 					}
+				}
+			break;
+
+			case 'newtask':
+				var alias=req.body.alias.replace(/[^_a-z0-9]/,'');
+
+				if(private.tasks.indexOfAlias(alias)<0)
+				{
+					private.tasks.add({ alias });
+
+					data.result=true;
+				}
+			break;
+
+			case 'deltask':
+				var alias=req.body.alias.replace(/[^_a-z0-9]/,'');
+
+				if(private.tasks.indexOfAlias(alias)>=0)
+				{
+					// req.body.alias;
+					data.result=true;
 				}
 			break;
 

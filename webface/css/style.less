@@ -45,6 +45,19 @@ body{
 		font-size: 2.5vh;
 	}
 
+	input[type=button],button{
+		padding: 3px;
+		background: linear-gradient(180deg, white, lightgray);
+		border: 1px solid gray;
+		border-radius: 3px;
+		.noselect();
+
+		&:active{
+			background: linear-gradient(0deg, white, lightgray);
+			border: 1px solid gray;
+		}
+	}
+
 	> .content{
 		min-width: 1000px;
 		// max-width: 1400px;
@@ -88,6 +101,13 @@ body{
 			.ctrl{
 				float: right;
 				margin: 0 10px;
+
+				button#newtask{
+					padding: 3px 2px 0;
+				}
+				button#killall{
+				    padding: 4px 8px;
+				}
 
 				> *{
 					padding: 5px;

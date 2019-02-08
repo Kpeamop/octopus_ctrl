@@ -169,6 +169,8 @@ html
 					.tab(sheet="tasks") Задачи
 					.tab(sheet="clients") Сервера
 				.ctrl
+					button(id="newtask" title="Добавить задачу")
+						img(src="/images/add.png")
 					| Запуск заданий
 					label.switch
 						input(id="enabled" type="checkbox" checked=(enabled))
