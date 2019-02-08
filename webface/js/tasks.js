@@ -9,7 +9,9 @@ function Tasks(parent_item,editor)
 	{
 		update:		(task,property,value,cb)	=> {},
 		kill:		(task)						=> {},
-		restart:	(task)						=> {}
+		restart:	(task)						=> {},
+		menu_edit:	(task) 						=> {},
+		menu_delete:(task)						=> {}
 	};
 
 	this.arrange=(jdata) =>
@@ -50,7 +52,9 @@ function Tasks(parent_item,editor)
 			{
 				update:		(property,value,cb) => this.ev.update(task,property,value,cb),
 				kill:		() => this.ev.kill(task),
-				restart:	() => this.ev.restart(task)
+				restart:	() => this.ev.restart(task),
+				menu_edit:	() => this.ev.menu_edit(task),
+				menu_delete:() => this.ev.menu_delete(task)
 			};
 
 			task.loadData(e);
@@ -71,7 +75,9 @@ function Task(parent_item,editor)
 	{
 		update:		(property,value,cb) => {},
 		kill:		() => {},
-		restart:	() => {}
+		restart:	() => {},
+		menu_edit:	() => {},
+		menu_delete:() => {}
 	};
 
 	this.bind('alias',		 v => this.value('alias',v));
@@ -168,7 +174,7 @@ function Task(parent_item,editor)
 
 	this.bindev('menu_delete','click',e =>
 	{
-		if(confirm('Удалить '+this.data('alias')+' ?')) alert(123);
+		if(confirm('Удалить "'+this.data('alias')+'" ?')) this.ev.menu_delete();
 	});
 
 	// animated self destruct

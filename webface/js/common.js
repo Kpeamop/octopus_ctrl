@@ -35,6 +35,9 @@ $(document).ready(() =>
 		update:		(task,property,value,unlock_cb)	=> jsonRequest('/set/task',{alias:task.data('alias'),property,value},unlock_cb),
 		kill: 		(task)	=> jsonRequest('/do/kill',{alias:task.data('alias')},() => {}),
 		restart:	(task)	=> jsonRequest(parseInt(task.data('pid'))>0 ? '/do/restart' : '/do/start',{alias:task.data('alias')},() => {}),
+
+		menu_edit:		task => {},
+		menu_delete:	task => jsonRequest('/do/deltask',{ alias: task.data('alias') },() => {})
 	};
 
 	clients.ev.update=(client,property,value,unlock_cb)	=> jsonRequest('/set/client',{alias:client.data('alias'),property,value},unlock_cb);

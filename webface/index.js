@@ -223,17 +223,20 @@ module.exports=function()
 				if(private.tasks.indexOfAlias(alias)<0)
 				{
 					private.tasks.add({ alias });
+					private.tasks.save();
 
 					data.result=true;
 				}
 			break;
 
 			case 'deltask':
-				var alias=req.body.alias.replace(/[^_a-z0-9]/,'');
+				var alias=req.body.alias.replace(/[^_a-z0-9]/,''),i;
 
-				if(private.tasks.indexOfAlias(alias)>=0)
+				if((i=private.tasks.indexOfAlias(alias))>=0)
 				{
-					// req.body.alias;
+					private.tasks.delete(i);
+					private.tasks.save();
+
 					data.result=true;
 				}
 			break;
