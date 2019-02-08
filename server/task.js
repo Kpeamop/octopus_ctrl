@@ -214,6 +214,8 @@ exports.task=Task=function(props)
 
 exports.tasklist=TaskList=function()
 {
+	var debug=false;
+
 	var dbf=path.dirname(__dirname)+'/db.json',
 		tasks=[];
 

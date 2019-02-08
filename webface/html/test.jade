@@ -9,10 +9,13 @@ html
 		br
 		textarea(id="log" cols="60" rows="30")
 		script
-			| var ax=new XMLHttpRequest();
-			| ax.open('GET','/json/test',true);
-			| ax.onreadystatechange=() =>
+			| document.getElementById('log').value='';
+			| const get=url =>
 			| {
-			|	if(ax.readyState==4) document.getElementById('log').value=ax.status==200 ? ax.responseText : ax.status+':'+ax.statusText;
-			| };
-			| ax.send();
+			|  var ax=new XMLHttpRequest();
+			|  ax.open('GET',url,true);
+			|  ax.onreadystatechange=() => { if(ax.readyState==4) document.getElementById('log').value+=(ax.status==200 ? ax.responseText : ax.status+':'+ax.statusText)+'\n'; };
+			|  ax.send();
+			| }
+			| get('/json/test');
+			| get('/json/config');

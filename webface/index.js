@@ -4,6 +4,7 @@ const compress=require('compression');
 const basic=require('express-basic-auth');
 const less=require('less');
 const fs=require('fs');
+const auth=require('basic-auth');
 
 module.exports=function()
 {
@@ -26,7 +27,7 @@ module.exports=function()
 	server.use(express.json());
 	server.use(express.urlencoded({ extended: true }));
 
-	server.use(function (req,res,next)
+	server.use(function(req,res,next)
 	{
 		if(Object.keys(private.config.users).length>0)
 			basic({ users: private.config.users, challenge: true })(req,res,next);
@@ -110,7 +111,10 @@ module.exports=function()
 			break;
 
 			case 'config':
-
+				data=Object.assign({
+										enabled: private.cron.enabled
+									},
+									private.config);
 			break;
 
 			case 'log':
@@ -141,11 +145,14 @@ module.exports=function()
 		var m=req.url.match(/^\/set\/([-_a-zA-Z0-9]*)(?:\/([-_a-zA-Z0-9]+))?$/),
 			action=m instanceof Array && m[1]!==undefined ? m[1] : 'index';
 
-		var data={ result: false };
+		var data={ result: false },
+			log_msg='';
 
 		switch(action)
 		{
 			case 'client':
+				log_msg=req.body.alias+'.'+req.body.property+':'+req.body.value;
+
 				if((i=private.clients.indexOfAlias(req.body.alias))>=0)
 				{
 					private.clients.items(i).props[req.body.property]=req.body.value;
@@ -155,6 +162,8 @@ module.exports=function()
 			break;
 
 			case 'task':
+				log_msg=req.body.alias+'.'+req.body.property+':'+req.body.value;
+
 				if((i=private.tasks.indexOfAlias(req.body.alias))>=0)
 				{
 					private.tasks.items(i).props[req.body.property]=req.body.value;
@@ -165,6 +174,8 @@ module.exports=function()
 			break;
 
 			case 'enabled':
+				log_msg='cron.enabled:'+req.body.value;
+
 				private.cron.enabled=req.body.value;
 			break;
 
@@ -177,6 +188,8 @@ module.exports=function()
 		res.type('application/json');
 
 		res.send(JSON.stringify(data));
+
+		$this.ev.log_command(getUser(req),'set',action,log_msg,data.result);
 	});
 
 	server.post(/^\/do\/(.+)$/,function(req,res)
@@ -184,11 +197,14 @@ module.exports=function()
 		var m=req.url.match(/^\/do\/([-_a-zA-Z0-9]+)(?:\/([-_a-zA-Z0-9]+))?$/),
 			action=m instanceof Array && m[1]!==undefined ? m[1] : 'index';
 
-		var data={ result: false };
+		var data={ result: false },
+			log_msg='';
 
 		switch(action)
 		{
 			case 'start':
+				log_msg=req.body.alias;
+
 				var i;
 				if(i=private.tasks.itemOfAlias(req.body.alias))
 				{
@@ -199,6 +215,8 @@ module.exports=function()
 			break;
 
 			case 'kill':
+				log_msg=m[2] || req.body.alias;
+
 				if(m[2]!==undefined && m[2]=='all')
 				{
 					private.tasks.killall();//killall
@@ -242,6 +260,8 @@ module.exports=function()
 			break;
 
 			case 'restart':
+				log_msg=req.body.alias;
+
 				var i;
 				if(i=private.tasks.itemOfAlias(req.body.alias))
 				{
@@ -257,7 +277,14 @@ module.exports=function()
 		res.type('application/json');
 
 		res.send(JSON.stringify(data));
+
+		$this.ev.log_command(getUser(req),'do',action,log_msg,data.result);
 	});
+
+	this.ev=
+	{
+		log_command: (user,command,action,message,result) => {}
+	};
 
 	this.set=function(k,v)
 	{
@@ -276,3 +303,10 @@ module.exports=function()
 		});
 	};
 };
+
+function getUser(req)
+{
+	var u=auth(req);
+
+	return u ? u.name : 'anonymous';
+}

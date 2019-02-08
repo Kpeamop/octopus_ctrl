@@ -42,11 +42,28 @@ $(document).ready(() =>
 
 	clients.ev.update=(client,property,value,unlock_cb)	=> jsonRequest('/set/client',{alias:client.data('alias'),property,value},unlock_cb);
 
-	var refresh_data=() =>
+	var need_status=false;
+
+	const refresh_status=() =>
+	{
+		$.getJSON('/json/config',jdata =>
+		{
+			if(jdata['enabled']!==undefined) $('#enabled').prop('checked',jdata['enabled']);
+		});
+	};
+
+	const refresh_data=() =>
 	{
 		if($('.clients.tabsheet:visible').length>0 || !$('.clients.tabsheet > *').length)
 			$.getJSON('/json/clients',jdata =>
 			{
+				if(need_status)
+				{
+					need_status=false;
+
+					refresh_status();
+				}
+
 				$(clients.dom()).removeClass('disabled');
 				$('.content .menu').removeClass('disabled');
 
@@ -54,6 +71,8 @@ $(document).ready(() =>
 			})
 			.fail(e =>
 			{
+				need_status=true;
+
 				$(clients.dom()).addClass('disabled');
 				$('.content .menu').addClass('disabled');
 
@@ -63,6 +82,13 @@ $(document).ready(() =>
 		if($('.tasks.tabsheet:visible').length>0 || !$('.tasks.tabsheet > *').length)
 			$.getJSON('/json/tasks',jdata =>
 			{
+				if(need_status)
+				{
+					need_status=false;
+
+					refresh_status();
+				}
+
 				$(tasks.dom()).removeClass('disabled');
 				$('.content .menu').removeClass('disabled');
 
@@ -70,6 +96,8 @@ $(document).ready(() =>
 			})
 			.fail(e =>
 			{
+				need_status=true;
+
 				$(tasks.dom()).addClass('disabled');
 				$('.content .menu').addClass('disabled');
 

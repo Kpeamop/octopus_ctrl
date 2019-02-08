@@ -4,6 +4,7 @@ const { client,clientlist }=require('./client');
 const { task,tasklist }=require('./task');
 const logger=require('./logger');
 const cron=require('./cron');
+const jconf=require('./jconf');
 
 module.exports=Server=function()
 {
@@ -144,10 +145,29 @@ module.exports=Server=function()
 
 	this.run=() =>
 	{
+		var saveserv_status;
+
+		if(this.config.saveserv_status)
+		{
+			saveserv_status=new jconf(path.dirname(__dirname)+'/saveserv_status.json');
+			saveserv_status.load();
+		}
+
 		this.server=net.createServer()
 		.on('connection',sock =>
 		{
 			var c=new client(sock);
+
+			if(saveserv_status)
+			{
+				if(saveserv_status.data[c.props.alias]!==undefined) c.props.enabled=saveserv_status.data[c.props.alias];
+
+				c.ev.enable_change=active =>
+				{
+					saveserv_status.data[c.props.alias]=active;
+					saveserv_status.save();
+				};
+			}
 
 			var i;
 

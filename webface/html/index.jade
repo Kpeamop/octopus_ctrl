@@ -94,8 +94,8 @@ mixin task_item
 				label.switch
 					input.t-enabled(type="checkbox")
 					.slider
-			.stat.server
-				span.t-client(href="") test-client1
+			.stat.client
+				a.t-client(href="") test-client1
 				br
 				| pid:
 				span.t-pid 1234
@@ -167,7 +167,7 @@ html
 			.menu
 				.tabs
 					.tab(sheet="tasks") Задачи
-					.tab(sheet="clients") Сервера
+					.tab(sheet="clients") Обработчики
 				.ctrl
 					button(id="newtask" title="Добавить задачу")
 						img(src="/images/add.png")
